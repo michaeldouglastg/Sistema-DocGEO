@@ -1,3 +1,6 @@
+Attribute VB_Name = "TesteFinalRefatoracao"
+Option Explicit
+
 Sub Teste_Final_Refatoracao()
     ' ==============================================================================
     ' TESTE FINAL - REFATORAÇÃO VALIDADA

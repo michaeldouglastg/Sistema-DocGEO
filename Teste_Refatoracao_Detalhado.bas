@@ -1,3 +1,6 @@
+Attribute VB_Name = "TesteRefatoracaoDetalhado"
+Option Explicit
+
 Sub Teste_Refatoracao_Detalhado()
     ' ==============================================================================
     ' TESTE DETALHADO DA REFATORAÇÃO

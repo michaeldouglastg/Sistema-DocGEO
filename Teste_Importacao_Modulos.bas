@@ -1,3 +1,6 @@
+Attribute VB_Name = "TesteImportacaoModulos"
+Option Explicit
+
 Sub Teste_Importacao_Modulos()
     ' ==============================================================================
     ' TESTE RÁPIDO: Verifica se os módulos refatorados foram importados

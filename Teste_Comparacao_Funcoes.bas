@@ -1,3 +1,6 @@
+Attribute VB_Name = "TesteComparacaoFuncoes"
+Option Explicit
+
 Sub Teste_Comparacao_Funcoes()
     ' ==============================================================================
     ' TESTE: Compara funções antigas vs novas
