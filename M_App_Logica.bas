@@ -204,8 +204,8 @@ Public Sub Processo_Conv_SGL_UTM()
         cacheE(i) = utmAtual.Leste
 
         arrOut(i, 1) = arrSGL(i, 1)
-        arrOut(i, 2) = Round(utmAtual.Norte, 4)  ' 4 casas decimais para melhor precisão
-        arrOut(i, 3) = Round(utmAtual.Leste, 4)
+        arrOut(i, 2) = Round(utmAtual.Norte, 2)  ' 2 casas decimais
+        arrOut(i, 3) = Round(utmAtual.Leste, 2)
         arrOut(i, 4) = arrSGL(i, 4)
         arrOut(i, 8) = arrSGL(i, 8)
         arrOut(i, 9) = arrSGL(i, 9)
