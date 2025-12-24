@@ -26,9 +26,28 @@ md5sum M_App_Logica.bas
 
 | Arquivo | MD5 | Tamanho | Versão |
 |---------|-----|---------|--------|
-| M_Utils_REFATORADO.bas | `e488387345a03859cf0585d537f343eb` | 20KB | 2.0 |
+| M_Utils_REFATORADO.bas | `e31d5971a7c9918c31c599bc473c5031` | 20KB | 2.1 (Chr fix) |
 | M_Math_Geo_REFATORADO.bas | `99bd165204446ff555fd3a78581f8093` | 21KB | 2.0 |
 | M_App_Logica.bas | `c046b629a5e034dfe3ad1ca781c4c661` | 18KB | Atualizado |
+
+---
+
+## ⚠️ IMPORTANTE: Versão 2.1 (Chr Fix)
+
+**Última atualização:** 2024-12-24
+
+A versão 2.1 corrige um problema crítico de encoding onde o caractere `°` (símbolo de grau) era corrompido para `"Â°"` ao baixar o arquivo, causando falha no parsing DMS.
+
+**Mudança principal:**
+```vba
+' VERSÃO 2.0 (antiga - problema de encoding):
+Replace(textoLimpo, "°", " ")
+
+' VERSÃO 2.1 (nova - usa código ASCII):
+Replace(textoLimpo, Chr(176), " ")  ' Chr(176) = símbolo °
+```
+
+Se você baixou o arquivo ANTES desta atualização e está tendo problemas, **baixe novamente**!
 
 ---
 
