@@ -154,60 +154,65 @@ Public Sub Processo_Conv_SGL_UTM()
     Dim loSGL As ListObject, loUTM As ListObject
     Dim i As Long, qtd As Long
     Dim arrSGL As Variant
-    
+
     On Error Resume Next
     Set wsSGL = ThisWorkbook.Sheets(M_Config.SH_SGL)
     Set wsUTM = ThisWorkbook.Sheets(M_Config.SH_UTM)
     Set loSGL = wsSGL.ListObjects(M_Config.TBL_SGL)
     Set loUTM = wsUTM.ListObjects(M_Config.TBL_UTM)
     On Error GoTo 0
-    
+
     If loSGL Is Nothing Or loUTM Is Nothing Then Exit Sub
     If loSGL.ListRows.Count = 0 Then Exit Sub
-    
+
     Call M_Utils.Utils_OtimizarPerformance(True)
     M_SheetProtection.DesbloquearPlanilha wsUTM
-    
+
     Call M_Dados.Dados_LimparTabela(M_Config.SH_UTM, M_Config.TBL_UTM)
-    
+
     arrSGL = loSGL.DataBodyRange.Value
     qtd = UBound(arrSGL, 1)
-    
+
     Dim linhasAtuais As Long: linhasAtuais = loUTM.ListRows.Count
     If linhasAtuais < qtd Then
         For i = 1 To qtd - linhasAtuais: loUTM.ListRows.Add: Next i
     End If
-    
+
     Dim arrOut() As Variant
     ReDim arrOut(1 To qtd, 1 To loUTM.ListColumns.Count)
-    
+
     Dim latDD As Double, lonDD As Double
     Dim utmAtual As Type_UTM
     Dim zonaPadrao As Integer
-    
+
+    ' Detecta fuso automaticamente da primeira coordenada
     lonDD = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(1, 2)))
     zonaPadrao = M_Math_Geo.Geo_GetZonaUTM(lonDD)
-    
+
     Dim cacheN() As Double, cacheE() As Double
     ReDim cacheN(1 To qtd), cacheE(1 To qtd)
-    
+
+    ' Primeira passagem: Converte todas as coordenadas Geo → UTM
     For i = 1 To qtd
         lonDD = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 2)))
         latDD = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 3)))
-        utmAtual = M_Math_Geo.Geo_LatLon_Para_UTM(latDD, lonDD, zonaPadrao)
-        
+
+        ' USA FUNÇÃO REFATORADA: Converter_GeoParaUTM (com 3 parâmetros)
+        utmAtual = M_Math_Geo.Converter_GeoParaUTM(latDD, lonDD, zonaPadrao)
+
         cacheN(i) = utmAtual.Norte
         cacheE(i) = utmAtual.Leste
-        
+
         arrOut(i, 1) = arrSGL(i, 1)
-        arrOut(i, 2) = Round(utmAtual.Norte, 3)
-        arrOut(i, 3) = Round(utmAtual.Leste, 3)
+        arrOut(i, 2) = Round(utmAtual.Norte, 4)  ' 4 casas decimais para melhor precisão
+        arrOut(i, 3) = Round(utmAtual.Leste, 4)
         arrOut(i, 4) = arrSGL(i, 4)
         arrOut(i, 8) = arrSGL(i, 8)
         arrOut(i, 9) = arrSGL(i, 9)
         arrOut(i, 10) = arrSGL(i, 10)
     Next i
-    
+
+    ' Segunda passagem: Calcula azimute e distância entre pontos consecutivos
     For i = 1 To qtd
         Dim idxProx As Long
         If i < qtd Then
@@ -217,17 +222,18 @@ Public Sub Processo_Conv_SGL_UTM()
             idxProx = 1
             arrOut(i, 5) = arrSGL(1, 1)
         End If
-        
-        Dim distancia As Double, azimute As Double
-        distancia = M_Math_Geo.Math_Distancia_Euclidiana(cacheE(i), cacheN(i), cacheE(idxProx), cacheN(idxProx))
-        azimute = M_Math_Geo.Geo_Azimute_Plano(cacheE(i), cacheN(i), cacheE(idxProx), cacheN(idxProx))
-        
-        arrOut(i, 6) = M_Utils.Str_FormatAzimute(azimute)
-        arrOut(i, 7) = Round(distancia, 3)
+
+        ' USA FUNÇÃO REFATORADA: Calcular_DistanciaAzimute_UTM (calcula tudo de uma vez)
+        Dim calc As Type_CalculoPonto
+        calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(cacheN(i), cacheE(i), cacheN(idxProx), cacheE(idxProx))
+
+        ' USA NOVA FUNÇÃO: Str_FormatAzimuteGMS (com segundos: GGG°MM'SS")
+        arrOut(i, 6) = M_Utils.Str_FormatAzimuteGMS(calc.AzimuteDecimal)
+        arrOut(i, 7) = Round(calc.Distancia, 3)
     Next i
-    
+
     loUTM.DataBodyRange.Value = arrOut
-    
+
     M_SheetProtection.BloquearPlanilha wsUTM
     Call Processo_AtualizarMetricas
     Call M_Utils.Utils_OtimizarPerformance(False)
@@ -380,26 +386,25 @@ Public Sub Calcular_Azimute_UTM()
     Dim loUTM As ListObject
     Dim i As Long, qtd As Long
     Dim N1 As Double, E1 As Double, N2 As Double, e2 As Double
-    Dim azimute As Double
-    
+
     On Error GoTo Erro
     Set wsUTM = ThisWorkbook.Sheets(M_Config.SH_UTM)
     Set loUTM = wsUTM.ListObjects(M_Config.TBL_UTM)
-    
+
     If loUTM.ListRows.Count < 2 Then
         MsgBox "Minimo 2 vertices necessarios.", vbExclamation
         Exit Sub
     End If
-    
+
     M_SheetProtection.DesbloquearPlanilha wsUTM
     Call M_Utils.Utils_OtimizarPerformance(True)
-    
+
     qtd = loUTM.ListRows.Count
-    
+
     For i = 1 To qtd
         N1 = CDbl(loUTM.DataBodyRange(i, 2).Value)
         E1 = CDbl(loUTM.DataBodyRange(i, 3).Value)
-        
+
         If i < qtd Then
             N2 = CDbl(loUTM.DataBodyRange(i + 1, 2).Value)
             e2 = CDbl(loUTM.DataBodyRange(i + 1, 3).Value)
@@ -407,16 +412,20 @@ Public Sub Calcular_Azimute_UTM()
             N2 = CDbl(loUTM.DataBodyRange(1, 2).Value)
             e2 = CDbl(loUTM.DataBodyRange(1, 3).Value)
         End If
-        
-        azimute = M_Math_Geo.Geo_Azimute_Plano(N1, E1, N2, e2)
-        loUTM.DataBodyRange(i, 6).Value = M_Utils.Str_FormatAzimute(azimute)
+
+        ' USA FUNÇÃO REFATORADA: Calcular_DistanciaAzimute_UTM
+        Dim calc As Type_CalculoPonto
+        calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(N1, E1, N2, e2)
+
+        ' USA NOVA FUNÇÃO: Str_FormatAzimuteGMS (com segundos)
+        loUTM.DataBodyRange(i, 6).Value = M_Utils.Str_FormatAzimuteGMS(calc.AzimuteDecimal)
     Next i
-    
+
     Call M_Utils.Utils_OtimizarPerformance(False)
     M_SheetProtection.BloquearPlanilha wsUTM
     MsgBox "Azimutes calculados!", vbInformation
     Exit Sub
-    
+
 Erro:
     Call M_Utils.Utils_OtimizarPerformance(False)
     M_SheetProtection.BloquearPlanilha wsUTM
