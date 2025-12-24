@@ -53,8 +53,13 @@ Public Function Str_DMS_Para_DD(ByVal dmsString As String) As Double
 
     ' --- DETECÇÃO RÁPIDA: Se já é decimal (não tem ° nem ') ---
     If InStr(textoOriginal, "°") = 0 And InStr(textoOriginal, "'") = 0 Then
-        ' Trata vírgula como ponto decimal
-        Str_DMS_Para_DD = CDbl(Replace(textoOriginal, ",", "."))
+        ' CORREÇÃO: Val() sempre usa ponto como decimal, independente da configuração regional
+        ' Normaliza vírgula para ponto primeiro
+        Dim decimalNormalizado As String
+        decimalNormalizado = Replace(textoOriginal, ",", ".")
+
+        ' Val() ignora configuração regional e sempre usa ponto como decimal
+        Str_DMS_Para_DD = Val(decimalNormalizado)
         Exit Function
     End If
 
