@@ -231,6 +231,40 @@ Public Function Str_FormatAzimute(ByVal azimuteDecimal As Double) As String
 End Function
 
 ' ------------------------------------------------------------------------------
+' FUNÇÃO: FORMATAR AZIMUTE GMS (GRAUS DECIMAIS PARA GGG°MM'SS")
+' ------------------------------------------------------------------------------
+' Normaliza azimute para 0-360° e formata com SEGUNDOS
+' Usado para coordenadas UTM onde precisão maior é necessária
+' Exemplo: 123.9117 → "123°54'42""
+' ------------------------------------------------------------------------------
+Public Function Str_FormatAzimuteGMS(ByVal azimuteDecimal As Double) As String
+    ' Normaliza para 0-360
+    If azimuteDecimal < 0 Then azimuteDecimal = azimuteDecimal + 360
+    If azimuteDecimal >= 360 Then azimuteDecimal = azimuteDecimal - 360
+
+    Dim graus As Long, minutos As Long, segundos As Long
+    Dim tempDecimal As Double
+
+    graus = Int(azimuteDecimal)
+    tempDecimal = (azimuteDecimal - graus) * 60
+    minutos = Int(tempDecimal)
+    segundos = Round((tempDecimal - minutos) * 60, 0)
+
+    ' Ajustes de overflow
+    If segundos >= 60 Then
+        segundos = segundos - 60
+        minutos = minutos + 1
+    End If
+    If minutos >= 60 Then
+        minutos = minutos - 60
+        graus = graus + 1
+    End If
+    If graus >= 360 Then graus = 0
+
+    Str_FormatAzimuteGMS = Format(graus, "000") & Chr(176) & Format(minutos, "00") & "'" & Format(segundos, "00") & Chr(34)
+End Function
+
+' ------------------------------------------------------------------------------
 ' FUNÇÃO: AZIMUTE GMS PARA DECIMAL
 ' ------------------------------------------------------------------------------
 ' Converte string de azimute (sem quadrante) para graus decimais
