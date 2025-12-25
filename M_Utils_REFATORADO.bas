@@ -106,10 +106,10 @@ Public Function Str_DMS_Para_DD(ByVal dmsString As String) As Double
 
     numGrau = 0: numMin = 0: numSeg = 0
 
-    ' Usa CDbl() para máxima precisão (seguro pois vírgula já foi normalizada para ponto)
-    If UBound(partes) >= 0 Then numGrau = CDbl(partes(0))
-    If UBound(partes) >= 1 Then numMin = CDbl(partes(1))
-    If UBound(partes) >= 2 Then numSeg = CDbl(partes(2))
+    ' Usa Val() pois sempre interpreta ponto como decimal (ignora configuração regional)
+    If UBound(partes) >= 0 Then numGrau = Val(partes(0))
+    If UBound(partes) >= 1 Then numMin = Val(partes(1))
+    If UBound(partes) >= 2 Then numSeg = Val(partes(2))
 
     ' Validação básica
     If numMin >= 60 Or numSeg >= 60 Then GoTo ErroConversao
