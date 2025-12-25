@@ -21,6 +21,24 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
             perimetroTotal = perimetroTotal + CDbl(cell.Value)
         End If
     Next cell
+    
+    ' Cálculo de área usando fórmula de Shoelace (coordenadas UTM)
+    Dim areaM2 As Double, areaHa As Double, j As Long
+    areaM2 = 0
+    For i = 1 To loPrincipal.ListRows.Count
+        j = i + 1
+        If j > loPrincipal.ListRows.Count Then j = 1 ' Fecha o polígono
+        
+        Dim N1 As Double, E1 As Double, N2 As Double, E2 As Double
+        N1 = loPrincipal.ListRows(i).Range(2).Value ' Coord. N(Y)
+        E1 = loPrincipal.ListRows(i).Range(3).Value ' Coord. E(X)
+        N2 = loPrincipal.ListRows(j).Range(2).Value
+        E2 = loPrincipal.ListRows(j).Range(3).Value
+        
+        areaM2 = areaM2 + (E1 * N2 - E2 * N1)
+    Next i
+    areaM2 = Abs(areaM2) / 2 ' Valor absoluto e divide por 2
+    areaHa = areaM2 / 10000 ' Converte m² para hectares
 
     ' Título
     textoFinal = "TABELA ANALÍTICA" & vbCrLf & vbCrLf
@@ -31,7 +49,7 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
     textoFinal = textoFinal & "Município: " & vbTab & vbTab & dadosPropriedade("Município/UF") & vbCrLf
     textoFinal = textoFinal & "Estado: " & vbTab & vbTab & dadosPropriedade("Estado") & vbCrLf
     textoFinal = textoFinal & "Sistema UTM: " & vbTab & dadosPropriedade("Sistema UTM") & vbCrLf
-    textoFinal = textoFinal & "Área medida e demarcada: " & vbTab & Format(dadosPropriedade("Area (SGL)"), "#,##0.0000") & " hectares" & vbCrLf
+    textoFinal = textoFinal & "Área medida e demarcada: " & vbTab & Format(areaHa, "#,##0.0000") & " hectares" & vbCrLf
     textoFinal = textoFinal & "Perímetro demarcado: " & vbTab & Format(perimetroTotal, "#,##0.00") & " metros" & vbCrLf & vbCrLf
 
     ' Descrição
@@ -66,13 +84,9 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
 
     textoFinal = textoFinal & String(150, "-") & vbCrLf
     
-    ' Cálculo da área em m²
-    Dim areaM2 As Double
-    areaM2 = dadosPropriedade("Area (SGL)") * 10000 ' Converte hectares para m²
-    
     textoFinal = textoFinal & "Perímetro: " & Format(perimetroTotal, "#,##0.00 m") & vbCrLf
     textoFinal = textoFinal & "Área m²: " & Format(areaM2, "#,##0.00 m²") & vbCrLf
-    textoFinal = textoFinal & "Área ha: " & Format(dadosPropriedade("Area (SGL)"), "#,##0.0000 ha") & vbCrLf & vbCrLf
+    textoFinal = textoFinal & "Área ha: " & Format(areaHa, "#,##0.0000 ha") & vbCrLf & vbCrLf
 
     ' Data
     Dim dataTexto As String, dataCapitalizada As String
@@ -122,6 +136,25 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
             perimetroTotal = perimetroTotal + CDbl(cell.Value)
         End If
     Next cell
+    
+    ' Cálculo de área usando fórmula de Shoelace (coordenadas UTM)
+    Dim areaM2 As Double, areaHa As Double
+    areaM2 = 0
+    Dim j As Long
+    For i = 1 To loPrincipal.ListRows.Count
+        j = i + 1
+        If j > loPrincipal.ListRows.Count Then j = 1 ' Fecha o polígono
+        
+        Dim N1 As Double, E1 As Double, N2 As Double, E2 As Double
+        N1 = loPrincipal.ListRows(i).Range(2).Value ' Coord. N(Y)
+        E1 = loPrincipal.ListRows(i).Range(3).Value ' Coord. E(X)
+        N2 = loPrincipal.ListRows(j).Range(2).Value
+        E2 = loPrincipal.ListRows(j).Range(3).Value
+        
+        areaM2 = areaM2 + (E1 * N2 - E2 * N1)
+    Next i
+    areaM2 = Abs(areaM2) / 2 ' Valor absoluto e divide por 2
+    areaHa = areaM2 / 10000 ' Converte m² para hectares
 
     ' --- ETAPA 2: Gerar e Formatar o Documento Word ---
     If Not M_Word_Engine.Word_Setup(False, 2.5, 2.5, 2.25, 3#) Then Exit Sub
@@ -160,7 +193,7 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
             .cell(5, 2).Range.Text = dadosPropriedade("Sistema UTM")
 
             .cell(6, 1).Range.Text = "Área medida e demarcada:"
-            .cell(6, 2).Range.Text = Format(dadosPropriedade("Area (SGL)"), "#,##0.0000") & " hectares"
+            .cell(6, 2).Range.Text = Format(areaHa, "#,##0.0000") & " hectares"
 
             .cell(7, 1).Range.Text = "Perímetro demarcado:"
             .cell(7, 2).Range.Text = Format(perimetroTotal, "#,##0.00") & " metros"
@@ -244,8 +277,7 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
         Dim tblRodape As Word.Table
         Set tblRodape = wordDoc.Tables.Add(Range:=.Range, NumRows:=2, NumColumns:=1)
         
-        Dim areaM2 As Double
-        areaM2 = dadosPropriedade("Area (SGL)") * 10000 ' Converte hectares para m²
+        ' Área já calculada acima
         
         With tblRodape
             .Borders.Enable = True
@@ -255,7 +287,7 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
             .Range.Cells.VerticalAlignment = wdCellAlignVerticalCenter
             
             .cell(1, 1).Range.Text = "Perímetro: " & Format(perimetroTotal, "#,##0.00 m")
-            .cell(2, 1).Range.Text = "Área: " & Format(areaM2, "#,##0.00 m²") & "    Área: " & Format(dadosPropriedade("Area (SGL)"), "#,##0.0000 ha")
+            .cell(2, 1).Range.Text = "Área: " & Format(areaM2, "#,##0.00 m²") & "    Área: " & Format(areaHa, "#,##0.0000 ha")
         End With
     End With
     
