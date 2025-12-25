@@ -166,8 +166,11 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
             .cell(7, 2).Range.Text = Format(perimetroTotal, "#,##0.00") & " metros"
 
             ' Formatação: Coluna 1 normal, Coluna 2 negrito
-            .Columns(1).Range.Font.Bold = False
-            .Columns(2).Range.Font.Bold = True
+            Dim r As Long
+            For r = 1 To 7
+                .cell(r, 1).Range.Font.Bold = False
+                .cell(r, 2).Range.Font.Bold = True
+            Next r
 
             .Range.ParagraphFormat.Alignment = wdAlignParagraphLeft
         End With
