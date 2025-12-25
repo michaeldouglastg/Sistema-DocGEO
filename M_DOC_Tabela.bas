@@ -257,7 +257,14 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
             .cell(1, 1).Range.Text = "Perímetro: " & Format(perimetroTotal, "#,##0.00 m")
             .cell(2, 1).Range.Text = "Área: " & Format(areaM2, "#,##0.00 m²") & "    Área: " & Format(dadosPropriedade("Area (SGL)"), "#,##0.0000 ha")
         End With
-        
+    End With
+    
+    ' Move o cursor para FORA da tabela de rodapé
+    Set rng = wordDoc.Content
+    rng.Collapse wdCollapseEnd
+    rng.Select
+    
+    With wordApp.Selection
         .TypeParagraph
         .TypeParagraph
         .TypeParagraph
