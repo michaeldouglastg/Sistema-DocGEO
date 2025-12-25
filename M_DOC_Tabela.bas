@@ -24,16 +24,18 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
     
     ' Cálculo de área usando fórmula de Shoelace (coordenadas UTM)
     Dim areaM2 As Double, areaHa As Double, j As Long
+    Dim N1 As Double, E1 As Double, N2 As Double, E2 As Double
     areaM2 = 0
+    
     For i = 1 To loPrincipal.ListRows.Count
         j = i + 1
         If j > loPrincipal.ListRows.Count Then j = 1 ' Fecha o polígono
         
-        Dim N1 As Double, E1 As Double, N2 As Double, E2 As Double
-        N1 = loPrincipal.ListRows(i).Range(2).Value ' Coord. N(Y)
-        E1 = loPrincipal.ListRows(i).Range(3).Value ' Coord. E(X)
-        N2 = loPrincipal.ListRows(j).Range(2).Value
-        E2 = loPrincipal.ListRows(j).Range(3).Value
+        ' Converte para Double com segurança
+        N1 = CDbl(loPrincipal.ListRows(i).Range(2).Value) ' Coord. N(Y)
+        E1 = CDbl(loPrincipal.ListRows(i).Range(3).Value) ' Coord. E(X)
+        N2 = CDbl(loPrincipal.ListRows(j).Range(2).Value)
+        E2 = CDbl(loPrincipal.ListRows(j).Range(3).Value)
         
         areaM2 = areaM2 + (E1 * N2 - E2 * N1)
     Next i
@@ -138,18 +140,19 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
     Next cell
     
     ' Cálculo de área usando fórmula de Shoelace (coordenadas UTM)
-    Dim areaM2 As Double, areaHa As Double
+    Dim areaM2 As Double, areaHa As Double, j As Long
+    Dim N1 As Double, E1 As Double, N2 As Double, E2 As Double
     areaM2 = 0
-    Dim j As Long
+    
     For i = 1 To loPrincipal.ListRows.Count
         j = i + 1
         If j > loPrincipal.ListRows.Count Then j = 1 ' Fecha o polígono
         
-        Dim N1 As Double, E1 As Double, N2 As Double, E2 As Double
-        N1 = loPrincipal.ListRows(i).Range(2).Value ' Coord. N(Y)
-        E1 = loPrincipal.ListRows(i).Range(3).Value ' Coord. E(X)
-        N2 = loPrincipal.ListRows(j).Range(2).Value
-        E2 = loPrincipal.ListRows(j).Range(3).Value
+        ' Converte para Double com segurança
+        N1 = CDbl(loPrincipal.ListRows(i).Range(2).Value) ' Coord. N(Y)
+        E1 = CDbl(loPrincipal.ListRows(i).Range(3).Value) ' Coord. E(X)
+        N2 = CDbl(loPrincipal.ListRows(j).Range(2).Value)
+        E2 = CDbl(loPrincipal.ListRows(j).Range(3).Value)
         
         areaM2 = areaM2 + (E1 * N2 - E2 * N1)
     Next i
