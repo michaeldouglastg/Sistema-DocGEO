@@ -197,6 +197,7 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
         With tblWord
             .Borders.Enable = True
             .Range.Font.Name = "Arial": .Range.Font.Size = 9
+            .Range.Font.Bold = False
             .Range.ParagraphFormat.LineSpacingRule = wdLineSpaceSingle
             .Range.ParagraphFormat.Alignment = wdAlignParagraphCenter
             .Range.Cells.VerticalAlignment = wdCellAlignVerticalCenter
@@ -236,9 +237,12 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
     ' --- TABELA DE RODAPÉ (2 linhas x 1 coluna) ---
     With wordApp.Selection
         .TypeParagraph
+        .TypeParagraph
+        .TypeParagraph
+        .TypeParagraph
         
         Dim tblRodape As Word.Table
-        Set tblRodape = wordDoc.Tables.Add(Range:=.Range, NumRows:=3, NumColumns:=1)
+        Set tblRodape = wordDoc.Tables.Add(Range:=.Range, NumRows:=2, NumColumns:=1)
         
         Dim areaM2 As Double
         areaM2 = dadosPropriedade("Area (SGL)") * 10000 ' Converte hectares para m²
@@ -251,10 +255,12 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
             .Range.Cells.VerticalAlignment = wdCellAlignVerticalCenter
             
             .cell(1, 1).Range.Text = "Perímetro: " & Format(perimetroTotal, "#,##0.00 m")
-            .cell(2, 1).Range.Text = "Área: " & Format(areaM2, "#,##0.00 m²")
-            .cell(3, 1).Range.Text = "Área: " & Format(dadosPropriedade("Area (SGL)"), "#,##0.0000 ha")
+            .cell(2, 1).Range.Text = "Área: " & Format(areaM2, "#,##0.00 m²") & "    Área: " & Format(dadosPropriedade("Area (SGL)"), "#,##0.0000 ha")
         End With
         
+        .TypeParagraph
+        .TypeParagraph
+        .TypeParagraph
         .TypeParagraph
         .TypeParagraph
 
@@ -268,6 +274,16 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
         .Font.Bold = True: .Font.Size = 12
         .TypeText dadosPropriedade("Município/UF") & ", " & dataTexto & "."
         .TypeParagraph: .TypeParagraph: .TypeParagraph: .TypeParagraph
+    End With
+
+    ' Move o cursor para FORA
+    Set rng = wordDoc.Content
+    rng.Collapse wdCollapseEnd
+    rng.Select
+    
+    With wordApp.Selection
+        .TypeParagraph
+        .TypeParagraph
     End With
 
     ' Bloco de Assinaturas
