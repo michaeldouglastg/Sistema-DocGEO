@@ -2,7 +2,7 @@ Attribute VB_Name = "M_DOC_Tabela"
 Option Explicit
 
 ' =========================================================================================
-' FUNï¿½ï¿½O PARA GERAR O TEXTO DA TABELA ANALï¿½TICA PARA O PREVIEW
+' FUNÇÃO PARA GERAR O TEXTO DA TABELA ANALÍTICA PARA O PREVIEW
 ' =========================================================================================
 Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecnico As Object) As String
     On Error GoTo ErroFuncao
@@ -13,16 +13,16 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
     Dim loConversao As ListObject: Set loConversao = wsConversao.ListObjects("tbl_Conversao")
     Dim textoFinal As String, i As Long, perimetroTotal As Double
 
-    ' Cï¿½lculo de perï¿½metro seguro
+    ' Cálculo de perímetro seguro
     Dim cell As Range
     perimetroTotal = 0
-    For Each cell In loPrincipal.ListColumns("Distï¿½ncia").DataBodyRange.Cells
+    For Each cell In loPrincipal.ListColumns("Distância").DataBodyRange.Cells
         If IsNumeric(cell.Value) Then
             perimetroTotal = perimetroTotal + CDbl(cell.Value)
         End If
     Next cell
     
-    ' Cï¿½lculo de ï¿½rea usando funï¿½ï¿½o Geo_Area_Gauss (coordenadas UTM)
+    ' Cálculo de área usando função Geo_Area_Gauss (coordenadas UTM)
     Dim areaM2 As Double, areaHa As Double
     Dim arrN As Variant, arrE As Variant
 
@@ -40,22 +40,22 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
     End If
     On Error GoTo ErroFuncao
 
-    ' Tï¿½tulo
-    textoFinal = "TABELA ANALï¿½TICA" & vbCrLf & vbCrLf
+    ' Título
+    textoFinal = "TABELA ANALÍTICA" & vbCrLf & vbCrLf
 
-    ' Cabeï¿½alho
-    textoFinal = textoFinal & "Imï¿½vel: " & vbTab & vbTab & dadosPropriedade("Denominaï¿½ï¿½o") & vbCrLf
-    textoFinal = textoFinal & "Proprietï¿½rio: " & vbTab & dadosPropriedade("Proprietï¿½rio") & vbCrLf
-    textoFinal = textoFinal & "Municï¿½pio: " & vbTab & vbTab & dadosPropriedade("Municï¿½pio/UF") & vbCrLf
+    ' Cabeçalho
+    textoFinal = textoFinal & "Imóvel: " & vbTab & vbTab & dadosPropriedade("Denominação") & vbCrLf
+    textoFinal = textoFinal & "Proprietário: " & vbTab & dadosPropriedade("Proprietário") & vbCrLf
+    textoFinal = textoFinal & "Município: " & vbTab & vbTab & dadosPropriedade("Município/UF") & vbCrLf
     textoFinal = textoFinal & "Estado: " & vbTab & vbTab & dadosPropriedade("Estado") & vbCrLf
     textoFinal = textoFinal & "Sistema UTM: " & vbTab & dadosPropriedade("Sistema UTM") & vbCrLf
-    textoFinal = textoFinal & "ï¿½rea medida e demarcada: " & vbTab & Format(areaHa, "#,##0.0000") & " hectares" & vbCrLf
-    textoFinal = textoFinal & "Perï¿½metro demarcado: " & vbTab & Format(perimetroTotal, "#,##0.00") & " metros" & vbCrLf & vbCrLf
+    textoFinal = textoFinal & "Área medida e demarcada: " & vbTab & Format(areaHa, "#,##0.0000") & " hectares" & vbCrLf
+    textoFinal = textoFinal & "Perímetro demarcado: " & vbTab & Format(perimetroTotal, "#,##0.00") & " metros" & vbCrLf & vbCrLf
 
-    ' Descriï¿½ï¿½o
-    textoFinal = textoFinal & "DESCRIï¿½ï¿½O" & vbCrLf
+    ' Descrição
+    textoFinal = textoFinal & "DESCRIÇÃO" & vbCrLf
     textoFinal = textoFinal & String(150, "-") & vbCrLf
-    textoFinal = textoFinal & "De" & vbTab & "Para" & vbTab & "Coord. N(Y)" & vbTab & "Coord. E(X)" & vbTab & "Azimute" & vbTab & "Distï¿½ncia" & vbCrLf
+    textoFinal = textoFinal & "De" & vbTab & "Para" & vbTab & "Coord. N(Y)" & vbTab & "Coord. E(X)" & vbTab & "Azimute" & vbTab & "Distância" & vbCrLf
     textoFinal = textoFinal & String(150, "-") & vbCrLf
 
     ' Corpo da tabela
@@ -63,30 +63,36 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
         For i = 1 To loPrincipal.ListRows.Count
             Dim utmN As Variant, utmE As Variant, dist As Variant
 
-            ' Lï¿½ coordenadas UTM diretamente da tabela principal
-            utmN = loPrincipal.ListRows(i).Range(2).Value ' Coord. N(Y)
-            utmE = loPrincipal.ListRows(i).Range(3).Value ' Coord. E(X)
+            ' Verifica se a linha correspondente existe na tabela de conversão
+            If i <= loConversao.ListRows.Count Then
+                utmN = loConversao.ListRows(i).Range(2).Value ' Coord. N(Y)
+                utmE = loConversao.ListRows(i).Range(3).Value ' Coord. E(X)
+            Else
+                utmN = "N/A"
+                utmE = "N/A"
+            End If
+
             dist = loPrincipal.ListRows(i).Range(7).Value
 
             textoFinal = textoFinal & loPrincipal.ListRows(i).Range(1).Value & vbTab ' De
             textoFinal = textoFinal & loPrincipal.ListRows(i).Range(5).Value & vbTab ' Para
 
-            ' Formata apenas se for numï¿½rico
+            ' Formata apenas se for numérico
             If IsNumeric(utmN) Then textoFinal = textoFinal & Format(utmN, "#,##0.00") & vbTab Else textoFinal = textoFinal & utmN & vbTab
             If IsNumeric(utmE) Then textoFinal = textoFinal & Format(utmE, "#,##0.00") & vbTab Else textoFinal = textoFinal & utmE & vbTab
 
             textoFinal = textoFinal & loPrincipal.ListRows(i).Range(6).Value & vbTab ' Azimute
 
-            ' Formata apenas se for numï¿½rico
+            ' Formata apenas se for numérico
             If IsNumeric(dist) Then textoFinal = textoFinal & Format(dist, "#,##0.00 m") & vbCrLf Else textoFinal = textoFinal & dist & vbCrLf
         Next i
     End If
 
     textoFinal = textoFinal & String(150, "-") & vbCrLf
     
-    textoFinal = textoFinal & "Perï¿½metro: " & Format(perimetroTotal, "#,##0.00 m") & vbCrLf
-    textoFinal = textoFinal & "ï¿½rea mï¿½: " & Format(areaM2, "#,##0.00 mï¿½") & vbCrLf
-    textoFinal = textoFinal & "ï¿½rea ha: " & Format(areaHa, "#,##0.0000 ha") & vbCrLf & vbCrLf
+    textoFinal = textoFinal & "Perímetro: " & Format(perimetroTotal, "#,##0.00 m") & vbCrLf
+    textoFinal = textoFinal & "Área m²: " & Format(areaM2, "#,##0.00 m²") & vbCrLf
+    textoFinal = textoFinal & "Área ha: " & Format(areaHa, "#,##0.0000 ha") & vbCrLf & vbCrLf
 
     ' Data
     Dim dataTexto As String, dataCapitalizada As String
@@ -94,25 +100,25 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
     dataCapitalizada = StrConv(dataTexto, vbProperCase)
     dataTexto = Replace(dataCapitalizada, " De ", " de ")
 
-    textoFinal = textoFinal & vbTab & vbTab & vbTab & dadosPropriedade("Municï¿½pio/UF") & ", " & dataTexto & "." & vbCrLf & vbCrLf & vbCrLf
+    textoFinal = textoFinal & vbTab & vbTab & vbTab & dadosPropriedade("Município/UF") & ", " & dataTexto & "." & vbCrLf & vbCrLf & vbCrLf
 
     ' Assinatura
     textoFinal = textoFinal & "____________________________________" & vbCrLf
-    textoFinal = textoFinal & "Responsï¿½vel Tï¿½cnico" & vbCrLf
-    textoFinal = textoFinal & dadosTecnico("Nome do Tï¿½cnico") & vbCrLf
-    textoFinal = textoFinal & dadosTecnico("Formaï¿½ï¿½o") & vbCrLf
-    textoFinal = textoFinal & dadosTecnico("Registro (CFT/CREA)") & " / INCRA: " & dadosTecnico("Cï¿½d. Incra") & vbCrLf
+    textoFinal = textoFinal & "Responsável Técnico" & vbCrLf
+    textoFinal = textoFinal & dadosTecnico("Nome do Técnico") & vbCrLf
+    textoFinal = textoFinal & dadosTecnico("Formação") & vbCrLf
+    textoFinal = textoFinal & dadosTecnico("Registro (CFT/CREA)") & " / INCRA: " & dadosTecnico("Cód. Incra") & vbCrLf
     textoFinal = textoFinal & dadosTecnico("TRT/ART")
 
     GerarTextoTabelaAnalitica = textoFinal
     Exit Function
 
 ErroFuncao:
-    GerarTextoTabelaAnalitica = "Ocorreu um erro ao gerar o texto da Tabela Analï¿½tica: " & Err.Description
+    GerarTextoTabelaAnalitica = "Ocorreu um erro ao gerar o texto da Tabela Analítica: " & Err.Description
 End Function
 
 ' =========================================================================================
-' MACRO PARA GERAR A TABELA ANALï¿½TICA EM WORD
+' MACRO PARA GERAR A TABELA ANALÍTICA EM WORD
 ' =========================================================================================
 Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As Object, Optional gerarComoPDF As Boolean = False)
 
@@ -126,18 +132,18 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
     Dim i As Long
 
     frmAguarde.Show vbModeless
-    frmAguarde.AtualizarStatus "Gerando Tabela Analï¿½tica..."
+    frmAguarde.AtualizarStatus "Gerando Tabela Analítica..."
 
-    ' Cï¿½lculo de perï¿½metro seguro
+    ' Cálculo de perímetro seguro
     Dim perimetroTotal As Double, cell As Range
     perimetroTotal = 0
-    For Each cell In loPrincipal.ListColumns("Distï¿½ncia").DataBodyRange.Cells
+    For Each cell In loPrincipal.ListColumns("Distância").DataBodyRange.Cells
         If IsNumeric(cell.Value) Then
             perimetroTotal = perimetroTotal + CDbl(cell.Value)
         End If
     Next cell
 
-    ' Cï¿½lculo de ï¿½rea usando funï¿½ï¿½o Geo_Area_Gauss (coordenadas UTM)
+    ' Cálculo de área usando função Geo_Area_Gauss (coordenadas UTM)
     Dim areaM2 As Double, areaHa As Double
     Dim arrN As Variant, arrE As Variant
 
@@ -154,6 +160,24 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
         areaHa = 0
     End If
     On Error GoTo ErroWord
+    
+    ' Cálculo de área usando função Geo_Area_Gauss (coordenadas UTM)
+    Dim areaM2 As Double, areaHa As Double
+    Dim arrN As Variant, arrE As Variant
+
+    On Error Resume Next
+    If loPrincipal.ListRows.Count >= 3 Then
+        arrN = loPrincipal.ListColumns(2).DataBodyRange.Value ' Coord. N(Y)
+        arrE = loPrincipal.ListColumns(3).DataBodyRange.Value ' Coord. E(X)
+        arrN = Application.Transpose(arrN)
+        arrE = Application.Transpose(arrE)
+        areaM2 = M_Math_Geo.Geo_Area_Gauss(arrE, arrN)
+        areaHa = areaM2 / 10000
+    Else
+        areaM2 = 0
+        areaHa = 0
+    End If
+    On Error GoTo ErroFuncao
 
     ' --- ETAPA 2: Gerar e Formatar o Documento Word ---
     If Not M_Word_Engine.Word_Setup(False, 2.5, 2.5, 2.25, 3#) Then Exit Sub
@@ -161,49 +185,27 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
     Dim wordDoc As Object: Set wordDoc = M_Word_Engine.GetWordDoc()
 
     With wordApp.Selection
-        ' Tï¿½tulo
+        ' Título
         .ParagraphFormat.Alignment = wdAlignParagraphCenter
         .Font.Bold = True: .Font.Underline = wdUnderlineSingle: .Font.Size = 14
-        .TypeText "TABELA ANALï¿½TICA"
+        .TypeText "TABELA ANALÍTICA"
         .TypeParagraph: .TypeParagraph
 
         .Font.Name = "Arial": .Font.Bold = False: .Font.Size = 12: .Font.Underline = wdUnderlineNone
 
-        ' --- CABEï¿½ALHO EM DUAS COLUNAS COM TABELA INVISï¿½VEL ---
+        ' --- CABEÇALHO EM DUAS COLUNAS COM TABELA INVISÍVEL ---
         Dim tblHeader As Word.Table
         Set tblHeader = wordDoc.Tables.Add(Range:=.Range, NumRows:=7, NumColumns:=2)
         tblHeader.Borders.Enable = False
 
         With tblHeader
-            ' Coluna 1: Labels (fonte normal) | Coluna 2: Valores (fonte negrito)
-            .cell(1, 1).Range.Text = "Imï¿½vel:"
-            .cell(1, 2).Range.Text = dadosPropriedade("Denominaï¿½ï¿½o")
-
-            .cell(2, 1).Range.Text = "Proprietï¿½rio:"
-            .cell(2, 2).Range.Text = dadosPropriedade("Proprietï¿½rio")
-
-            .cell(3, 1).Range.Text = "Municï¿½pio:"
-            .cell(3, 2).Range.Text = dadosPropriedade("Municï¿½pio/UF")
-
-            .cell(4, 1).Range.Text = "Estado:"
-            .cell(4, 2).Range.Text = dadosPropriedade("Estado")
-
-            .cell(5, 1).Range.Text = "Sistema UTM:"
-            .cell(5, 2).Range.Text = dadosPropriedade("Sistema UTM")
-
-            .cell(6, 1).Range.Text = "ï¿½rea medida e demarcada:"
-            .cell(6, 2).Range.Text = Format(areaHa, "#,##0.0000") & " hectares"
-
-            .cell(7, 1).Range.Text = "Perï¿½metro demarcado:"
-            .cell(7, 2).Range.Text = Format(perimetroTotal, "#,##0.00") & " metros"
-
-            ' Formataï¿½ï¿½o: Coluna 1 normal, Coluna 2 negrito
-            Dim r As Long
-            For r = 1 To 7
-                .cell(r, 1).Range.Font.Bold = False
-                .cell(r, 2).Range.Font.Bold = True
-            Next r
-
+            SetCellTextBoldLabel .cell(1, 1), "Imóvel: ", dadosPropriedade("Denominação")
+            SetCellTextBoldLabel .cell(2, 1), "Proprietário: ", dadosPropriedade("Proprietário")
+            SetCellTextBoldLabel .cell(3, 1), "Município: ", dadosPropriedade("Município/UF")
+            SetCellTextBoldLabel .cell(4, 1), "Estado: ", dadosPropriedade("Estado")
+            SetCellTextBoldLabel .cell(5, 1), "Sistema UTM: ", dadosPropriedade("Sistema UTM")
+            SetCellTextBoldLabel .cell(6, 1), "Área medida e demarcada: ", Format(areaHa, "#,##0.0000") & " hectares"
+            SetCellTextBoldLabel .cell(7, 1), "Perímetro demarcado: ", Format(perimetroTotal, "#,##0.00") & " metros"
             .Range.ParagraphFormat.Alignment = wdAlignParagraphLeft
         End With
 
@@ -215,26 +217,25 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
 
         .TypeParagraph
 
-        ' Subtï¿½tulo "DESCRIï¿½ï¿½O"
+        ' Subtítulo "DESCRIÇÃO"
         .ParagraphFormat.Alignment = wdAlignParagraphCenter
         .Font.Bold = True: .Font.Size = 12
-        .TypeText "DESCRIï¿½ï¿½O"
+        .TypeText "DESCRIÇÃO"
         .TypeParagraph
 
         ' Tabela de Coordenadas
         Dim tblWord As Word.Table, numLinhasTabela As Long
-        numLinhasTabela = loPrincipal.ListRows.Count + 1  ' +1 cabeï¿½alho
+        numLinhasTabela = loPrincipal.ListRows.Count + 2  ' +1 cabeçalho, +1 rodapé
         Set tblWord = wordDoc.Tables.Add(Range:=.Range, NumRows:=numLinhasTabela, NumColumns:=6)
 
         With tblWord
             .Borders.Enable = True
             .Range.Font.Name = "Arial": .Range.Font.Size = 9
-            .Range.Font.Bold = False
             .Range.ParagraphFormat.LineSpacingRule = wdLineSpaceSingle
             .Range.ParagraphFormat.Alignment = wdAlignParagraphCenter
             .Range.Cells.VerticalAlignment = wdCellAlignVerticalCenter
 
-            ' Cabeï¿½alho
+            ' Cabeçalho
             With .Rows(1).Range
                 .Font.Bold = True
                 .Shading.BackgroundPatternColor = wdColorGray15
@@ -245,58 +246,46 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
             .cell(1, 3).Range.Text = "Coord. N(Y)"
             .cell(1, 4).Range.Text = "Coord. E(X)"
             .cell(1, 5).Range.Text = "Azimute"
-            .cell(1, 6).Range.Text = "Distï¿½ncia"
+            .cell(1, 6).Range.Text = "Distância"
 
-            ' Corpo da tabela - Lï¿½ coordenadas diretamente da tabela principal
+            ' Corpo da tabela
             If loPrincipal.ListRows.Count > 0 Then
                 For i = 1 To loPrincipal.ListRows.Count
                     .cell(i + 1, 1).Range.Text = loPrincipal.ListRows(i).Range(1).Value ' De
                     .cell(i + 1, 2).Range.Text = loPrincipal.ListRows(i).Range(5).Value ' Para
-                    .cell(i + 1, 3).Range.Text = Format(loPrincipal.ListRows(i).Range(2).Value, "#,##0.00") ' UTM N
-                    .cell(i + 1, 4).Range.Text = Format(loPrincipal.ListRows(i).Range(3).Value, "#,##0.00") ' UTM E
+
+                    ' Verifica se existe a linha correspondente na tabela de conversão
+                    If i <= loConversao.ListRows.Count Then
+                        .cell(i + 1, 3).Range.Text = Format(loConversao.ListRows(i).Range(2).Value, "#,##0.00") ' UTM N
+                        .cell(i + 1, 4).Range.Text = Format(loConversao.ListRows(i).Range(3).Value, "#,##0.00") ' UTM E
+                    Else
+                        .cell(i + 1, 3).Range.Text = "N/A"
+                        .cell(i + 1, 4).Range.Text = "N/A"
+                    End If
+
                     .cell(i + 1, 5).Range.Text = loPrincipal.ListRows(i).Range(6).Value ' Azimute
-                    .cell(i + 1, 6).Range.Text = Format(loPrincipal.ListRows(i).Range(7).Value, "#,##0.00 m") ' Distï¿½ncia
+                    .cell(i + 1, 6).Range.Text = Format(loPrincipal.ListRows(i).Range(7).Value, "#,##0.00 m") ' Distância
                 Next i
             End If
+
+            ' Rodapé da tabela
+            With .Rows.Last.Range
+                .Font.Bold = True
+                .Shading.BackgroundPatternColor = wdColorGray15
+            End With
+            .cell(numLinhasTabela, 1).Range.Text = "Perímetro: " & Format(perimetroTotal, "#,##0.00 m")
+            .cell(numLinhasTabela, 4).Range.Text = "Área: " & Format(areaM2, "#,##0.00 m²") & "    Área: " & Format(areaHa, "#,##0.0000 ha")
+            .cell(numLinhasTabela, 1).Merge MergeTo:=.cell(numLinhasTabela, 3)
+            .cell(numLinhasTabela, 2).Merge MergeTo:=.cell(numLinhasTabela, 3)
         End With
     End With
 
-    ' Move o cursor para FORA da tabela de coordenadas
+    ' Move o cursor para FORA da tabela
     Set rng = wordDoc.Content
     rng.Collapse wdCollapseEnd
     rng.Select
 
-    ' --- TABELA DE RODAPï¿½ (2 linhas x 1 coluna) ---
     With wordApp.Selection
-        .TypeParagraph
-        .TypeParagraph
-        .TypeParagraph
-        .TypeParagraph
-        
-        Dim tblRodape As Word.Table
-        Set tblRodape = wordDoc.Tables.Add(Range:=.Range, NumRows:=2, NumColumns:=1)
-        
-        With tblRodape
-            .Borders.Enable = True
-            .Range.Font.Name = "Arial": .Range.Font.Size = 10
-            .Range.Font.Bold = True
-            .Range.ParagraphFormat.Alignment = wdAlignParagraphCenter
-            .Range.Cells.VerticalAlignment = wdCellAlignVerticalCenter
-            
-            .cell(1, 1).Range.Text = "Perï¿½metro: " & Format(perimetroTotal, "#,##0.00 m")
-            .cell(2, 1).Range.Text = "ï¿½rea: " & Format(areaM2, "#,##0.00 mï¿½") & "    ï¿½rea: " & Format(areaHa, "#,##0.0000 ha")
-        End With
-    End With
-    
-    ' Move o cursor para FORA da tabela de rodapï¿½
-    Set rng = wordDoc.Content
-    rng.Collapse wdCollapseEnd
-    rng.Select
-    
-    With wordApp.Selection
-        .TypeParagraph
-        .TypeParagraph
-        .TypeParagraph
         .TypeParagraph
         .TypeParagraph
 
@@ -308,18 +297,8 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
 
         .ParagraphFormat.Alignment = wdAlignParagraphRight
         .Font.Bold = True: .Font.Size = 12
-        .TypeText dadosPropriedade("Municï¿½pio/UF") & ", " & dataTexto & "."
+        .TypeText dadosPropriedade("Município/UF") & ", " & dataTexto & "."
         .TypeParagraph: .TypeParagraph: .TypeParagraph: .TypeParagraph
-    End With
-
-    ' Move o cursor para FORA
-    Set rng = wordDoc.Content
-    rng.Collapse wdCollapseEnd
-    rng.Select
-    
-    With wordApp.Selection
-        .TypeParagraph
-        .TypeParagraph
     End With
 
     ' Bloco de Assinaturas
@@ -330,10 +309,10 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
     With tblAssinaturas
         .Range.Font.Size = 12
         .cell(1, 1).Range.Text = "____________________________________" & vbCrLf & _
-                                 "Responsï¿½vel Tï¿½cnico" & vbCrLf & _
-                                 dadosTecnico("Nome do Tï¿½cnico") & vbCrLf & _
-                                 dadosTecnico("Formaï¿½ï¿½o") & vbCrLf & _
-                                 dadosTecnico("Registro (CFT/CREA)") & " / INCRA: " & dadosTecnico("Cï¿½d. Incra") & vbCrLf & _
+                                 "Responsável Técnico" & vbCrLf & _
+                                 dadosTecnico("Nome do Técnico") & vbCrLf & _
+                                 dadosTecnico("Formação") & vbCrLf & _
+                                 dadosTecnico("Registro (CFT/CREA)") & " / INCRA: " & dadosTecnico("Cód. Incra") & vbCrLf & _
                                  dadosTecnico("TRT/ART")
         .cell(1, 1).Range.Paragraphs(1).Range.Font.Bold = False
         .cell(1, 1).Range.Paragraphs(2).Range.Font.Bold = True
@@ -344,14 +323,14 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
         .cell(1, 1).Range.ParagraphFormat.Alignment = wdAlignParagraphCenter
     End With
 
-    ' --- ETAPA 3: FINALIZAï¿½ï¿½O ---
+    ' --- ETAPA 3: FINALIZAÇÃO ---
     Dim nomeArquivo As String
-    nomeArquivo = "Tabela Analï¿½tica - " & M_Utils.File_SanitizeName(dadosPropriedade("Denominaï¿½ï¿½o"))
+    nomeArquivo = "Tabela Analítica - " & M_Utils.File_SanitizeName(dadosPropriedade("Denominação"))
 
     Dim caminho As String
     caminho = M_Word_Engine.Word_Teardown(nomeArquivo, gerarComoPDF)
 
-    If caminho <> "" Then MsgBox "Tabela Analï¿½tica gerada com SUCESSO!", vbInformation
+    If caminho <> "" Then MsgBox "Tabela Analítica gerada com SUCESSO!", vbInformation
     Unload frmAguarde
     Exit Sub
 
@@ -359,13 +338,13 @@ ErroWord:
     On Error Resume Next
     Unload frmAguarde
     On Error GoTo 0
-    MsgBox "ERRO ao gerar a Tabela Analï¿½tica: " & Err.Description, vbCritical
+    MsgBox "ERRO ao gerar a Tabela Analítica: " & Err.Description, vbCritical
     If Not wordApp Is Nothing Then wordApp.Quit SaveChanges:=False
     Set wordApp = Nothing
 End Sub
 
 ' =========================================================================================
-' MACRO PARA GERAR A TABELA ANALï¿½TICA EM PDF
+' MACRO PARA GERAR A TABELA ANALÍTICA EM PDF
 ' =========================================================================================
 Public Sub GerarTabelaAnaliticaPDF(dadosProp As Object, dadosTec As Object)
     Call GerarTabelaAnaliticaWord(dadosProp, dadosTec, True)
