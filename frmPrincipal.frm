@@ -1,6 +1,6 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmPrincipal 
-   Caption         =   "Pré-Visualização do Documento"
+   Caption         =   "Prï¿½-Visualizaï¿½ï¿½o do Documento"
    ClientHeight    =   11700
    ClientLeft      =   30
    ClientTop       =   75
@@ -500,9 +500,12 @@ Private Sub cmdGerarPDF_Click()
         
     ElseIf Me.optRequerimento.Value Then
         Call GerarRequerimentoPDF(dadosProp, dadosTec)
-        
+
     ElseIf Me.optLaudo.Value Then
         Call GerarLaudoTecnicoPDF(dadosProp, dadosTec)
+
+    ElseIf Me.optTabela.Value Then
+        Call GerarTabelaAnaliticaPDF(dadosProp, dadosTec)
     End If
 End Sub
 
@@ -723,23 +726,23 @@ Private Function ColetarDadosPropriedade() As Object
     If Err.Number <> 0 Then areaSGL = 0
     On Error GoTo 0
     
-    D.Add "Denominação", Me.txtDenominacao.Value
-    D.Add "Matrícula", Me.txtMatricula.Value
-    D.Add "Cód. Incra/SNCR", Me.txtCodIncra.Value
-    D.Add "Natureza/Área", Me.txtNaturezaArea.Value
-    D.Add "Endereço Propriedade", Me.txtEndereco1.Value
-    D.Add "Município/UF", Me.txtMunicipio.Value
+    D.Add "Denominaï¿½ï¿½o", Me.txtDenominacao.Value
+    D.Add "Matrï¿½cula", Me.txtMatricula.Value
+    D.Add "Cï¿½d. Incra/SNCR", Me.txtCodIncra.Value
+    D.Add "Natureza/ï¿½rea", Me.txtNaturezaArea.Value
+    D.Add "Endereï¿½o Propriedade", Me.txtEndereco1.Value
+    D.Add "Municï¿½pio/UF", Me.txtMunicipio.Value
     D.Add "Comarca", Me.txtComarca.Value
-    D.Add "Cartório", Me.txtCartorio.Value
-    D.Add "Cartório (CNS)", Me.txtCartorioCNS.Value
-    D.Add "Proprietário", Me.txtProprietario.Value
+    D.Add "Cartï¿½rio", Me.txtCartorio.Value
+    D.Add "Cartï¿½rio (CNS)", Me.txtCartorioCNS.Value
+    D.Add "Proprietï¿½rio", Me.txtProprietario.Value
     D.Add "CPF", Me.txtCPF.Value
     D.Add "RG", Me.txtRG.Value
-    D.Add "Expedição", Me.txtExpedicao.Value
-    D.Add "Data Expedição", Me.txtDataExpedicao.Value
+    D.Add "Expediï¿½ï¿½o", Me.txtExpedicao.Value
+    D.Add "Data Expediï¿½ï¿½o", Me.txtDataExpedicao.Value
     D.Add "Nacionalidade", Me.txtNacionalidade.Value
     D.Add "Estado Civil", Me.txtEstadoCivil.Value
-    D.Add "Endereço Proprietário", Me.txtEndereco2.Value
+    D.Add "Endereï¿½o Proprietï¿½rio", Me.txtEndereco2.Value
     D.Add "Area (SGL)", areaSGL
     
     Set ColetarDadosPropriedade = D
@@ -747,10 +750,10 @@ End Function
 
 Private Function ColetarDadosTecnico() As Object
     Dim D As Object: Set D = CreateObject("Scripting.Dictionary")
-    D.Add "Nome do Técnico", Me.txtNomeTecnico.Value
-    D.Add "Formação", Me.txtFormacao.Value
+    D.Add "Nome do Tï¿½cnico", Me.txtNomeTecnico.Value
+    D.Add "Formaï¿½ï¿½o", Me.txtFormacao.Value
     D.Add "Registro (CFT/CREA)", Me.txtRegistro.Value
-    D.Add "Cód. Incra", Me.txtCodIncraTecnico.Value
+    D.Add "Cï¿½d. Incra", Me.txtCodIncraTecnico.Value
     D.Add "TRT/ART", Me.txtTRTART.Value
     Set ColetarDadosTecnico = D
 End Function
@@ -832,7 +835,7 @@ Private Sub cmdCadastrar_Click()
         'MsgBox "Propriedade"
         frmGerenciadorDB.Show
     ElseIf Status = "fraProprietario" Then
-        'MsgBox "Proprietário"
+        'MsgBox "Proprietï¿½rio"
         frmGerenciadorDB.Show
     End If
 End Sub
@@ -850,7 +853,7 @@ End Sub
 
 ' ==============================================================================
 ' EVENTOS DE CLIQUE NAS IMAGENS (PARA CARREGAR ARQUIVO)
-' Certifique-se de que os controles Image no formulário tenham estes nomes:
+' Certifique-se de que os controles Image no formulï¿½rio tenham estes nomes:
 ' imgLogo, imgMapa, imgRosa, imgConvencoes
 ' ==============================================================================
 
@@ -875,23 +878,23 @@ Private Sub imgConvencoes_Click()
 End Sub
 
 ' ==============================================================================
-' BOTÃO 1: GERAR MAPA NO EXCEL (DESENHO + IMAGENS)(COM TODOS OS CAMPOS)
-' Nome sugerido para o botão: cmdGerarExcelMapa
+' BOTï¿½O 1: GERAR MAPA NO EXCEL (DESENHO + IMAGENS)(COM TODOS OS CAMPOS)
+' Nome sugerido para o botï¿½o: cmdGerarExcelMapa
 ' ==============================================================================
 Private Sub cmdGerarExcelMapa_Click()
-    ' 1. Validação Simples
+    ' 1. Validaï¿½ï¿½o Simples
     If Me.txtTitulo.Text = "" Then
-        MsgBox "Por favor, digite um título para o mapa.", vbExclamation
+        MsgBox "Por favor, digite um tï¿½tulo para o mapa.", vbExclamation
         Me.txtTitulo.SetFocus
         Exit Sub
     End If
 
-    ' 2. Coleta de Dados dos outros frames (Propriedade/Técnico)
+    ' 2. Coleta de Dados dos outros frames (Propriedade/Tï¿½cnico)
     Dim dadosProp As Object, dadosTec As Object
     Set dadosProp = ColetarDadosPropriedade()
     Set dadosTec = ColetarDadosTecnico()
     
-    ' 3. Chama o Módulo M_DOC_Mapa passando TUDO
+    ' 3. Chama o Mï¿½dulo M_DOC_Mapa passando TUDO
     ' Ajuste os nomes "Me.txt..." abaixo conforme o nome real das suas caixas de texto
     Call M_DOC_Mapa.GerarMapaExcel(dadosProp, _
                                    dadosTec, _
@@ -911,8 +914,8 @@ Private Sub cmdGerarExcelMapa_Click()
 End Sub
 
 ' ==============================================================================
-' BOTÃO 2: GERAR PDF DO MAPA (A1)
-' Nome sugerido para o botão: cmdGerarPDFMapa
+' BOTï¿½O 2: GERAR PDF DO MAPA (A1)
+' Nome sugerido para o botï¿½o: cmdGerarPDFMapa
 ' ==============================================================================
 Private Sub cmdGerarPDFMapa_Click()
     Dim dadosProp As Object
@@ -930,7 +933,7 @@ Private Sub cmdGerarPDFMapa_Click()
 End Sub
 
 ' ==============================================================================
-' FUNÇÕES AUXILIARES (SELEÇÃO E PREVIEW DE IMAGEM)
+' FUNï¿½ï¿½ES AUXILIARES (SELEï¿½ï¿½O E PREVIEW DE IMAGEM)
 ' ==============================================================================
 Private Function SelecionarImagemDialogo() As String
     Dim fDialog As FileDialog

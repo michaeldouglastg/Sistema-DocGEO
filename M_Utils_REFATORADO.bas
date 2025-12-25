@@ -52,7 +52,7 @@ Public Function Str_DMS_Para_DD(ByVal dmsString As String) As Double
     End If
 
     ' --- DETECÇÃO RÁPIDA: Se já é decimal (não tem ° nem ') ---
-    If InStr(textoOriginal, "°") = 0 And InStr(textoOriginal, "'") = 0 Then
+    If InStr(textoOriginal, Chr(176)) = 0 And InStr(textoOriginal, "'") = 0 Then
         ' CORREÇÃO: Val() sempre usa ponto como decimal, independente da configuração regional
         ' Normaliza vírgula para ponto primeiro
         Dim decimalNormalizado As String
@@ -87,7 +87,7 @@ Public Function Str_DMS_Para_DD(ByVal dmsString As String) As Double
     textoLimpo = Replace(textoLimpo, "O", "", , , vbTextCompare)
 
     ' Remove símbolos de grau/minuto/segundo, substituindo por espaços
-    textoLimpo = Replace(textoLimpo, "°", " ")
+    textoLimpo = Replace(textoLimpo, Chr(176), " ")  ' Chr(176) = símbolo °
     textoLimpo = Replace(textoLimpo, "'", " ")
     textoLimpo = Replace(textoLimpo, """", " ")
     textoLimpo = Replace(textoLimpo, "-", "")
@@ -106,6 +106,7 @@ Public Function Str_DMS_Para_DD(ByVal dmsString As String) As Double
 
     numGrau = 0: numMin = 0: numSeg = 0
 
+    ' Usa Val() pois sempre interpreta ponto como decimal (ignora configuração regional)
     If UBound(partes) >= 0 Then numGrau = Val(partes(0))
     If UBound(partes) >= 1 Then numMin = Val(partes(1))
     If UBound(partes) >= 2 Then numSeg = Val(partes(2))
@@ -279,7 +280,7 @@ Public Function Str_Azimute_Para_DD(ByVal GMS_String As String) As Double
     tempStr = Trim(GMS_String)
 
     ' Limpa a string, deixando apenas números e espaços
-    tempStr = Replace(tempStr, "°", " ")
+    tempStr = Replace(tempStr, Chr(176), " ")  ' Chr(176) = símbolo °
     tempStr = Replace(tempStr, "'", " ")
     tempStr = Replace(tempStr, """", " ")
     tempStr = Replace(tempStr, ",", ".")
