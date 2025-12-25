@@ -26,13 +26,35 @@ md5sum M_App_Logica.bas
 
 | Arquivo | MD5 | Tamanho | Versão |
 |---------|-----|---------|--------|
-| M_Utils_REFATORADO.bas | `e31d5971a7c9918c31c599bc473c5031` | 20KB | 2.1 (Chr fix) |
+| M_Utils_REFATORADO.bas | `ca0558a04eab63c7152994ab62695104` | 20KB | **2.2 (FINAL)** |
 | M_Math_Geo_REFATORADO.bas | `99bd165204446ff555fd3a78581f8093` | 21KB | 2.0 |
 | M_App_Logica.bas | `c046b629a5e034dfe3ad1ca781c4c661` | 18KB | Atualizado |
 
 ---
 
-## ⚠️ IMPORTANTE: Versão 2.1 (Chr Fix)
+## 🚨 CRÍTICO: Versão 2.2 (FINAL) - Correção Val()
+
+**Última atualização:** 2024-12-24 (URGENTE)
+
+**⚠️ Se você baixou versão 2.1, BAIXE NOVAMENTE! Versão 2.1 tem bug crítico.**
+
+A versão 2.2 corrige um bug CRÍTICO da v2.1 onde CDbl() causava valores UTM zerados em Excel brasileiro.
+
+**Problema da v2.1:**
+```vba
+numSeg = CDbl("36.463")  // Excel BR interpreta como 36463 (ponto = separador de milhares)
+```
+
+**Correção da v2.2:**
+```vba
+numSeg = Val("36.463")  // Sempre interpreta ponto como decimal ✅
+```
+
+**Se você tem coordenadas UTM zeradas (Norte=0, Leste=166021), baixe v2.2!**
+
+---
+
+## ⚠️ IMPORTANTE: Versão 2.1 (Chr Fix) - OBSOLETA
 
 **Última atualização:** 2024-12-24
 
