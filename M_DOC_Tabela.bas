@@ -27,20 +27,22 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
     Dim N1 As Double, E1 As Double, N2 As Double, E2 As Double
     areaM2 = 0
     
+    On Error Resume Next ' Ignora erros de conversão
     For i = 1 To loPrincipal.ListRows.Count
         j = i + 1
-        If j > loPrincipal.ListRows.Count Then j = 1 ' Fecha o polígono
+        If j > loPrincipal.ListRows.Count Then j = 1
         
-        ' Converte para Double com segurança
-        N1 = CDbl(loPrincipal.ListRows(i).Range(2).Value) ' Coord. N(Y)
-        E1 = CDbl(loPrincipal.ListRows(i).Range(3).Value) ' Coord. E(X)
+        N1 = CDbl(loPrincipal.ListRows(i).Range(2).Value)
+        E1 = CDbl(loPrincipal.ListRows(i).Range(3).Value)
         N2 = CDbl(loPrincipal.ListRows(j).Range(2).Value)
         E2 = CDbl(loPrincipal.ListRows(j).Range(3).Value)
         
         areaM2 = areaM2 + (E1 * N2 - E2 * N1)
     Next i
-    areaM2 = Abs(areaM2) / 2 ' Valor absoluto e divide por 2
-    areaHa = areaM2 / 10000 ' Converte m² para hectares
+    On Error GoTo ErroFuncao ' Volta ao tratamento normal
+    
+    areaM2 = Abs(areaM2) / 2
+    areaHa = areaM2 / 10000
 
     ' Título
     textoFinal = "TABELA ANALÍTICA" & vbCrLf & vbCrLf
@@ -144,20 +146,22 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
     Dim N1 As Double, E1 As Double, N2 As Double, E2 As Double
     areaM2 = 0
     
+    On Error Resume Next ' Ignora erros de conversão
     For i = 1 To loPrincipal.ListRows.Count
         j = i + 1
-        If j > loPrincipal.ListRows.Count Then j = 1 ' Fecha o polígono
+        If j > loPrincipal.ListRows.Count Then j = 1
         
-        ' Converte para Double com segurança
-        N1 = CDbl(loPrincipal.ListRows(i).Range(2).Value) ' Coord. N(Y)
-        E1 = CDbl(loPrincipal.ListRows(i).Range(3).Value) ' Coord. E(X)
+        N1 = CDbl(loPrincipal.ListRows(i).Range(2).Value)
+        E1 = CDbl(loPrincipal.ListRows(i).Range(3).Value)
         N2 = CDbl(loPrincipal.ListRows(j).Range(2).Value)
         E2 = CDbl(loPrincipal.ListRows(j).Range(3).Value)
         
         areaM2 = areaM2 + (E1 * N2 - E2 * N1)
     Next i
-    areaM2 = Abs(areaM2) / 2 ' Valor absoluto e divide por 2
-    areaHa = areaM2 / 10000 ' Converte m² para hectares
+    On Error GoTo ErroWord ' Volta ao tratamento normal
+    
+    areaM2 = Abs(areaM2) / 2
+    areaHa = areaM2 / 10000
 
     ' --- ETAPA 2: Gerar e Formatar o Documento Word ---
     If Not M_Word_Engine.Word_Setup(False, 2.5, 2.5, 2.25, 3#) Then Exit Sub
@@ -279,8 +283,6 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
         
         Dim tblRodape As Word.Table
         Set tblRodape = wordDoc.Tables.Add(Range:=.Range, NumRows:=2, NumColumns:=1)
-        
-        ' Área já calculada acima
         
         With tblRodape
             .Borders.Enable = True
