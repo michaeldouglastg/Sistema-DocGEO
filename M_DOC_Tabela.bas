@@ -85,12 +85,10 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
     textoFinal = textoFinal & String(150, "-") & vbCrLf
     
     ' Cálculo da área em m²
-    Dim areaM2 As Double
-    areaM2 = dadosPropriedade("Area (SGL)") * 10000 ' Converte hectares para m²
     
     textoFinal = textoFinal & "Perímetro: " & Format(perimetroTotal, "#,##0.00 m") & vbCrLf
     textoFinal = textoFinal & "Área m²: " & Format(areaM2, "#,##0.00 m²") & vbCrLf
-    textoFinal = textoFinal & "Área ha: " & Format(dadosPropriedade("Area (SGL)"), "#,##0.0000 ha") & vbCrLf & vbCrLf
+    textoFinal = textoFinal & "Área ha: " & Format(areaHa, "#,##0.0000 ha") & vbCrLf & vbCrLf
 
     ' Data
     Dim dataTexto As String, dataCapitalizada As String
@@ -280,8 +278,6 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
         Dim tblRodape As Word.Table
         Set tblRodape = wordDoc.Tables.Add(Range:=.Range, NumRows:=2, NumColumns:=1)
         
-        Dim areaM2 As Double
-        areaM2 = dadosPropriedade("Area (SGL)") * 10000 ' Converte hectares para m²
         
         With tblRodape
             .Borders.Enable = True
