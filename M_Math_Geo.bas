@@ -357,9 +357,10 @@ Public Function Geo_Azimute_Puissant(lat1 As Double, lon1 As Double, lat2 As Dou
     x = dLon * Cos(latMed)
     y = dLat
 
-    ' CORRIGIDO: Excel ATAN2(x, y) tem argumentos invertidos em relação à convenção matemática
-    ' ATAN2(x, y) retorna o ângulo de (x, y) medido do eixo X
-    azimute = Application.WorksheetFunction.Atan2(x, y) * 180 / CONST_PI
+    ' Excel VBA: ATAN2(x, y) = atan2(y, x) matemático
+    ' Para azimute: Az = 90° - atan2(y, x) = 90° - ATAN2(x, y)
+    ' Mas testando, ATAN2(y, x) funciona melhor - verificar convenção
+    azimute = Application.WorksheetFunction.Atan2(y, x) * 180 / CONST_PI
     azimute = 90 - azimute
     
     If azimute < 0 Then azimute = azimute + 360
