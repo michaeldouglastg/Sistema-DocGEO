@@ -22,24 +22,13 @@ Public Function GerarTextoTabelaAnalitica(dadosPropriedade As Object, dadosTecni
         End If
     Next cell
     
-    ' Cálculo de área usando função Geo_Area_Gauss (coordenadas UTM)
-    Dim areaM2 As Double, areaHa As Double
-    Dim arrN As Variant, arrE As Variant
-
+    ' Usar área SGL já calculada (conforme Manual INCRA)
+    Dim areaHa As Double, areaM2 As Double
     On Error Resume Next
-    If loPrincipal.ListRows.Count >= 3 Then
-        arrN = loPrincipal.ListColumns(2).DataBodyRange.Value ' Coord. N(Y)
-        arrE = loPrincipal.ListColumns(3).DataBodyRange.Value ' Coord. E(X)
-        arrN = Application.Transpose(arrN)
-        arrE = Application.Transpose(arrE)
-        areaM2 = M_Math_Geo.Geo_Area_Gauss(arrE, arrN)
-        areaHa = areaM2 / 10000
-    Else
-        areaM2 = 0
-        areaHa = 0
-    End If
+    areaHa = CDbl(dadosPropriedade("Area (SGL)"))
     On Error GoTo ErroFuncao
-
+    areaM2 = areaHa * 10000
+    
     ' Título
     textoFinal = "TABELA ANALÍTICA" & vbCrLf & vbCrLf
 
@@ -139,22 +128,13 @@ Public Sub GerarTabelaAnaliticaWord(dadosPropriedade As Object, dadosTecnico As 
         End If
     Next cell
 
-    ' Cálculo de área usando função Geo_Area_Gauss (coordenadas UTM)
-    Dim areaM2 As Double, areaHa As Double
-    Dim arrN As Variant, arrE As Variant
-
+    ' Usar área SGL já calculada (conforme Manual INCRA)
+    Dim areaHa As Double, areaM2 As Double
     On Error Resume Next
-    If loPrincipal.ListRows.Count >= 3 Then
-        arrN = loPrincipal.ListColumns(2).DataBodyRange.Value ' Coord. N(Y)
-        arrE = loPrincipal.ListColumns(3).DataBodyRange.Value ' Coord. E(X)
-        arrN = Application.Transpose(arrN)
-        arrE = Application.Transpose(arrE)
-        areaM2 = M_Math_Geo.Geo_Area_Gauss(arrE, arrN)
-        areaHa = areaM2 / 10000
-    Else
-        areaM2 = 0
-        areaHa = 0
-    End If
+    areaHa = CDbl(dadosPropriedade("Area (SGL)"))
+    On Error GoTo ErroWord
+    areaM2 = areaHa * 10000
+
     On Error GoTo ErroWord
 
     ' --- ETAPA 2: Gerar e Formatar o Documento Word ---
