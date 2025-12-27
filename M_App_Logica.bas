@@ -516,8 +516,8 @@ Public Sub Calcular_Azimute_UTM()
 
         ' Converte AMBOS os pontos de UTM → Geo
         Dim geo1 As Type_Geo, geo2 As Type_Geo
-        geo1 = M_Math_Geo.Converter_UTMParaGeo(N1, E1, fusoUTM, hemisferio)
-        geo2 = M_Math_Geo.Converter_UTMParaGeo(N2, e2, fusoUTM, hemisferio)
+        geo1 = M_Math_Geo_REFATORADO.Converter_UTMParaGeo(N1, E1, fusoUTM, hemisferio)
+        geo2 = M_Math_Geo_REFATORADO.Converter_UTMParaGeo(N2, e2, fusoUTM, hemisferio)
 
         ' Calcula azimute geodésico usando Puissant (método INCRA/SIGEF)
         Dim azimuteGeod As Double
