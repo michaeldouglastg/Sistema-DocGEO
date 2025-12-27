@@ -227,8 +227,15 @@ Public Sub Processo_Conv_SGL_UTM()
         Dim calc As Type_CalculoPonto
         calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(cacheN(i), cacheE(i), cacheN(idxProx), cacheE(idxProx))
 
+        ' NOVO: Aplica correção de Convergência Meridiana para obter Azimute Geodésico
+        ' Azimute Geodésico = Azimute de Grid + Convergência Meridiana
+        Dim azimuteGeod As Double
+        lonDD = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 2)))
+        latDD = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 3)))
+        azimuteGeod = M_Math_Geo.Converter_AzimuteGridParaGeod(calc.AzimuteDecimal, latDD, lonDD, zonaPadrao)
+
         ' USA NOVA FUNÇÃO: Str_FormatAzimuteGMS (com segundos: GGG°MM'SS")
-        arrOut(i, 6) = M_Utils.Str_FormatAzimuteGMS(calc.AzimuteDecimal)
+        arrOut(i, 6) = M_Utils.Str_FormatAzimuteGMS(azimuteGeod)
         arrOut(i, 7) = Round(calc.Distancia, 3)
     Next i
 
@@ -485,8 +492,26 @@ Public Sub Calcular_Azimute_UTM()
         Dim calc As Type_CalculoPonto
         calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(N1, E1, N2, e2)
 
+        ' NOVO: Aplica correção de Convergência Meridiana
+        ' Primeiro, obtém fuso e hemisfério da tabela
+        Dim fusoUTM As Integer, hemisferio As String
+        On Error Resume Next
+        fusoUTM = M_UI_Main.UI_GetFusoAtual()
+        hemisferio = M_UI_Main.UI_GetHemisferioAtual()
+        If fusoUTM = 0 Then fusoUTM = 23  ' Padrão para Brasil
+        If hemisferio = "" Then hemisferio = "S"
+        On Error GoTo Erro
+
+        ' Converte UTM → Geo para obter lat/lon e calcular convergência
+        Dim geoAtual As Type_Geo
+        geoAtual = M_Math_Geo.Converter_UTMParaGeo(N1, E1, fusoUTM, hemisferio)
+
+        ' Aplica correção de convergência meridiana
+        Dim azimuteGeod As Double
+        azimuteGeod = M_Math_Geo.Converter_AzimuteGridParaGeod(calc.AzimuteDecimal, geoAtual.Latitude, geoAtual.Longitude, fusoUTM)
+
         ' USA NOVA FUNÇÃO: Str_FormatAzimuteGMS (com segundos)
-        loUTM.DataBodyRange(i, 6).Value = M_Utils.Str_FormatAzimuteGMS(calc.AzimuteDecimal)
+        loUTM.DataBodyRange(i, 6).Value = M_Utils.Str_FormatAzimuteGMS(azimuteGeod)
     Next i
 
     Call M_Utils.Utils_OtimizarPerformance(False)
