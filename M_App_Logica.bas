@@ -225,7 +225,7 @@ Public Sub Processo_Conv_SGL_UTM()
 
         ' Calcula distância usando coordenadas UTM (plano)
         Dim calc As Type_CalculoPonto
-        calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(cacheN(i), cacheE(i), cacheN(idxProx), cacheE(idxProx))
+        calc = M_Math_Geo_REFATORADO.Calcular_DistanciaAzimute_UTM(cacheN(i), cacheE(i), cacheN(idxProx), cacheE(idxProx))
 
         ' NOVO: Calcula AZIMUTE GEODÉSICO usando método de Puissant
         ' (SGL já tem coordenadas geodésicas - usa diretamente)
@@ -499,7 +499,7 @@ Public Sub Calcular_Azimute_UTM()
 
         ' Calcula distância usando coordenadas UTM (plano)
         Dim calc As Type_CalculoPonto
-        calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(N1, E1, N2, e2)
+        calc = M_Math_Geo_REFATORADO.Calcular_DistanciaAzimute_UTM(N1, E1, N2, e2)
 
         ' NOVO: Calcula AZIMUTE GEODÉSICO usando método de Puissant
         ' (igual ao SIGEF - azimute verdadeiro, não aproximação)
