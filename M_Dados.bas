@@ -6,16 +6,21 @@ Option Explicit
 ' ==============================================================================
 
 Public Sub Dados_LimparTabela(nomePlanilha As String, nomeTabela As String)
+    On Error GoTo ErroLimpar
     Dim ws As Worksheet, lo As ListObject
-    
-    On Error Resume Next
+
     Set ws = ThisWorkbook.Sheets(nomePlanilha)
     If ws Is Nothing Then Exit Sub
     Set lo = ws.ListObjects(nomeTabela)
     If lo Is Nothing Then Exit Sub
-    
+
     M_SheetProtection.DesbloquearPlanilha ws
     If Not lo.DataBodyRange Is Nothing Then lo.DataBodyRange.Delete
+    M_SheetProtection.BloquearPlanilha ws
+    Exit Sub
+
+ErroLimpar:
+    On Error Resume Next
     M_SheetProtection.BloquearPlanilha ws
     On Error GoTo 0
 End Sub
@@ -83,23 +88,24 @@ End Function
 Public Sub Dados_UpsertRegistro(nomePlanilha As String, nomeTabela As String, _
                                  colNomeChave As String, valorChave As String, _
                                  arrColunas As Variant, arrValores As Variant)
+    On Error GoTo ErroUpsert
     Dim ws As Worksheet, tbl As ListObject
     Dim colIndex As Long, matchRow As Variant
     Dim targetRow As ListRow
     Dim i As Long
-    
+
     If valorChave = "" Then Exit Sub
-    
+
     Set ws = ThisWorkbook.Sheets(nomePlanilha)
     Set tbl = ws.ListObjects(nomeTabela)
-    
+
     M_SheetProtection.DesbloquearPlanilha ws
-    
+
     On Error Resume Next
     colIndex = tbl.ListColumns(colNomeChave).Index
     matchRow = Application.Match(valorChave, tbl.ListColumns(colIndex).DataBodyRange, 0)
-    On Error GoTo 0
-    
+    On Error GoTo ErroUpsert
+
     If Not IsError(matchRow) Then
         If MsgBox("O registro '" & valorChave & "' ja existe. Deseja atualizar?", _
                   vbYesNo + vbQuestion, "Atualizar") = vbYes Then
@@ -111,16 +117,22 @@ Public Sub Dados_UpsertRegistro(nomePlanilha As String, nomeTabela As String, _
     Else
         Set targetRow = tbl.ListRows.Add(AlwaysInsert:=True)
     End If
-    
+
     On Error Resume Next
     For i = LBound(arrColunas) To UBound(arrColunas)
         If arrValores(i) <> "" Then
             targetRow.Range(tbl.ListColumns(arrColunas(i)).Index).Value = arrValores(i)
         End If
     Next i
-    On Error GoTo 0
-    
+    On Error GoTo ErroUpsert
+
     M_SheetProtection.BloquearPlanilha ws
+    Exit Sub
+
+ErroUpsert:
+    On Error Resume Next
+    M_SheetProtection.BloquearPlanilha ws
+    On Error GoTo 0
 End Sub
 
 Public Function Dados_BuscarValor(nomePlanilha As String, nomeTabela As String, _
