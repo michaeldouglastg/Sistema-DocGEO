@@ -493,13 +493,14 @@ Public Sub Calcular_Azimute_UTM()
         calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(N1, E1, N2, e2)
 
         ' NOVO: Aplica correção de Convergência Meridiana
-        ' Primeiro, obtém fuso e hemisfério da tabela
+        ' Primeiro, obtém fuso e hemisfério selecionados
         Dim fusoUTM As Integer, hemisferio As String
+        Dim hemisferioSul As Boolean
         On Error Resume Next
-        fusoUTM = M_UI_Main.UI_GetFusoAtual()
-        hemisferio = M_UI_Main.UI_GetHemisferioAtual()
+        fusoUTM = M_UI_Main.UI_GetFusoSelecionado()
+        hemisferioSul = M_UI_Main.UI_GetHemisferioSul()
         If fusoUTM = 0 Then fusoUTM = 23  ' Padrão para Brasil
-        If hemisferio = "" Then hemisferio = "S"
+        hemisferio = IIf(hemisferioSul, "S", "N")
         On Error GoTo Erro
 
         ' Converte UTM → Geo para obter lat/lon e calcular convergência
