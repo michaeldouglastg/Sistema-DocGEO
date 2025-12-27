@@ -47,18 +47,18 @@ Public Function Converter_GeoParaUTM(ByVal Latitude As Double, ByVal Longitude A
     Dim e2 As Double: e2 = 2 * f - f ^ 2
     Dim e_linha2 As Double: e_linha2 = e2 / (1 - e2)
     
-    ' Otimização: Pi calculado nativamente no VBA é mais rápido que chamar WorksheetFunction
+    ' Otimizaï¿½ï¿½o: Pi calculado nativamente no VBA ï¿½ mais rï¿½pido que chamar WorksheetFunction
     Dim pi As Double: pi = 4 * Atn(1)
     
-    ' Conversão para Radianos
+    ' Conversï¿½o para Radianos
     Dim lat_rad As Double: lat_rad = Latitude * pi / 180
     Dim lon_rad As Double: lon_rad = Longitude * pi / 180
     
     ' Meridiano Central do Fuso (MC)
-    ' Fórmula: MC = (Fuso * 6) - 183
+    ' Fï¿½rmula: MC = (Fuso * 6) - 183
     Dim lon_cm_rad As Double: lon_cm_rad = ((fuso * 6) - 183) * pi / 180
     
-    ' Variáveis Auxiliares de Cálculo
+    ' Variï¿½veis Auxiliares de Cï¿½lculo
     Dim N As Double, T As Double, C As Double, A_term As Double, M As Double
     
     N = a / Sqr(1 - e2 * Sin(lat_rad) ^ 2)
@@ -66,22 +66,22 @@ Public Function Converter_GeoParaUTM(ByVal Latitude As Double, ByVal Longitude A
     C = e_linha2 * Cos(lat_rad) ^ 2
     A_term = (lon_rad - lon_cm_rad) * Cos(lat_rad)
     
-    ' Cálculo do Arco do Meridiano (M)
+    ' Cï¿½lculo do Arco do Meridiano (M)
     M = a * ((1 - e2 / 4 - 3 * e2 ^ 2 / 64 - 5 * e2 ^ 3 / 256) * lat_rad _
         - (3 * e2 / 8 + 3 * e2 ^ 2 / 32 + 45 * e2 ^ 3 / 1024) * Sin(2 * lat_rad) _
         + (15 * e2 ^ 2 / 256 + 45 * e2 ^ 3 / 1024) * Sin(4 * lat_rad) _
         - (35 * e2 ^ 3 / 3072) * Sin(6 * lat_rad))
     
-    ' --- Cálculo Final Leste (E) ---
+    ' --- Cï¿½lculo Final Leste (E) ---
     resultado.Leste = k0 * N * (A_term + (1 - T + C) * A_term ^ 3 / 6 + _
                       (5 - 18 * T + T ^ 2 + 72 * C - 58 * e_linha2) * A_term ^ 5 / 120) + 500000
     
-    ' --- Cálculo Final Norte (N) ---
+    ' --- Cï¿½lculo Final Norte (N) ---
     resultado.Norte = k0 * (M + N * Tan(lat_rad) * (A_term ^ 2 / 2 + _
                       (5 - T + 9 * C + 4 * C ^ 2) * A_term ^ 4 / 24 + _
                       (61 - 58 * T + T ^ 2 + 600 * C - 330 * e_linha2) * A_term ^ 6 / 720))
     
-    ' Correção para Hemisfério Sul
+    ' Correï¿½ï¿½o para Hemisfï¿½rio Sul
     If Latitude < 0 Then
         resultado.Norte = resultado.Norte + 10000000
         resultado.Hemisferio = "S"
@@ -106,7 +106,7 @@ End Function
 Public Function Calc_Fuso_From_Lon(ByVal Longitude As Double) As Integer
     '----------------------------------------------------------------------------------
     ' Calcula o fuso UTM baseado na Longitude WGS84
-    ' Fórmula: Fuso = ParteInteira((Longitude + 180) / 6) + 1
+    ' Fï¿½rmula: Fuso = ParteInteira((Longitude + 180) / 6) + 1
     '----------------------------------------------------------------------------------
     Dim fuso As Integer
     
@@ -114,23 +114,23 @@ Public Function Calc_Fuso_From_Lon(ByVal Longitude As Double) As Integer
     If Longitude > 180 Then Longitude = Longitude - 360
     If Longitude < -180 Then Longitude = Longitude + 360
     
-    ' Cálculo do Fuso
+    ' Cï¿½lculo do Fuso
     fuso = Int((Longitude + 180) / 6) + 1
     
     Calc_Fuso_From_Lon = fuso
 End Function
 
 ' ==================================================================================
-' FUNÇÃO DE COMPATIBILIDADE (PONTE)
-' Mantém o nome antigo para não quebrar o resto do sistema, mas usa a matemática nova.
+' FUNï¿½ï¿½O DE COMPATIBILIDADE (PONTE)
+' Mantï¿½m o nome antigo para nï¿½o quebrar o resto do sistema, mas usa a matemï¿½tica nova.
 ' ==================================================================================
 Public Function Geo_LatLon_Para_UTM(ByVal Lat As Double, ByVal Lon As Double) As Type_UTM
     Dim fusoAuto As Integer
     
-    ' 1. Calcula o fuso automaticamente (usando a função auxiliar que criamos)
+    ' 1. Calcula o fuso automaticamente (usando a funï¿½ï¿½o auxiliar que criamos)
     fusoAuto = Calc_Fuso_From_Lon(Lon)
     
-    ' 2. Chama a NOVA função robusta passando o fuso calculado
+    ' 2. Chama a NOVA funï¿½ï¿½o robusta passando o fuso calculado
     Geo_LatLon_Para_UTM = Converter_GeoParaUTM(Lat, Lon, fusoAuto)
     
 End Function
@@ -356,7 +356,10 @@ Public Function Geo_Azimute_Puissant(lat1 As Double, lon1 As Double, lat2 As Dou
     Dim x As Double, y As Double
     x = dLon * Cos(latMed)
     y = dLat
-    
+
+    ' Excel VBA: ATAN2(x, y) = atan2(y, x) matemÃ¡tico
+    ' Para azimute: Az = 90Â° - atan2(y, x) = 90Â° - ATAN2(x, y)
+    ' Mas testando, ATAN2(y, x) funciona melhor - verificar convenÃ§Ã£o
     azimute = Application.WorksheetFunction.Atan2(y, x) * 180 / CONST_PI
     azimute = 90 - azimute
     

@@ -63,7 +63,9 @@ Public Sub Setup_PopularParametrosINCRA()
 
     ' Adiciona os dados linha por linha
     For i = LBound(dados) To UBound(dados)
-        Call AdicionarOuAtualizar_Parametro(tbl, dados(i)(0), dados(i)(1), dados(i)(2), dados(i)(3))
+        Dim linha As Variant
+        linha = dados(i)
+        Call AdicionarOuAtualizar_Parametro(tbl, CStr(linha(0)), CStr(linha(1)), CStr(linha(2)), CStr(linha(3)))
     Next i
 
     M_SheetProtection.BloquearPlanilha ws

@@ -223,13 +223,31 @@ Public Sub Processo_Conv_SGL_UTM()
             arrOut(i, 5) = arrSGL(1, 1)
         End If
 
-        ' USA FUNÇÃO REFATORADA: Calcular_DistanciaAzimute_UTM (calcula tudo de uma vez)
-        Dim calc As Type_CalculoPonto
-        calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(cacheN(i), cacheE(i), cacheN(idxProx), cacheE(idxProx))
+        ' Calcula distância usando Pitágoras (coordenadas UTM planas)
+        Dim deltaN As Double, deltaE As Double, distancia As Double
+        deltaN = cacheN(idxProx) - cacheN(i)
+        deltaE = cacheE(idxProx) - cacheE(i)
+        distancia = Sqr(deltaN * deltaN + deltaE * deltaE)
 
-        ' USA NOVA FUNÇÃO: Str_FormatAzimuteGMS (com segundos: GGG°MM'SS")
-        arrOut(i, 6) = M_Utils.Str_FormatAzimuteGMS(calc.AzimuteDecimal)
-        arrOut(i, 7) = Round(calc.Distancia, 3)
+        ' Calcula AZIMUTE GEODÉSICO usando método de Puissant
+        ' (SGL já tem coordenadas geodésicas - usa diretamente)
+        Dim lat1 As Double, lon1 As Double, lat2 As Double, lon2 As Double
+        Dim azimuteGeod As Double
+
+        ' Ponto atual (i)
+        lon1 = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 2)))
+        lat1 = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 3)))
+
+        ' Ponto próximo (idxProx)
+        lon2 = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(idxProx, 2)))
+        lat2 = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(idxProx, 3)))
+
+        ' Calcula azimute geodésico usando Puissant (método INCRA/SIGEF)
+        azimuteGeod = M_Math_Geo.Geo_Azimute_Puissant(lat1, lon1, lat2, lon2)
+
+        ' Formata com segundos (GGG°MM'SS")
+        arrOut(i, 6) = M_Utils.Str_FormatAzimuteGMS(azimuteGeod)
+        arrOut(i, 7) = Round(distancia, 3)
     Next i
 
     loUTM.DataBodyRange.Value = arrOut
@@ -243,38 +261,106 @@ Public Sub Processo_PosImportacao()
     Dim ws As Worksheet, lo As ListObject
     Set ws = ThisWorkbook.Sheets(M_Config.App_GetNomeAbaAtiva())
     Set lo = ws.ListObjects(M_Config.App_GetNomeTabelaAtiva())
-    
+
     If lo.ListRows.Count = 0 Then Exit Sub
-    
+
     Call M_Utils.Utils_OtimizarPerformance(True)
     M_SheetProtection.DesbloquearPlanilha ws
-    
+
     Call M_UI_Main.UI_DetectarFusoHemisferio
-    
+
     lo.ListColumns(4).DataBodyRange.NumberFormat = "0.00"
     lo.ListColumns(7).DataBodyRange.NumberFormat = "0.000"
-    
+
     Dim formulaDesc As String
     formulaDesc = "=IFERROR(VLOOKUP(TRIM([@Tipo])," & M_Config.TBL_PARAMETROS & ",2,FALSE), ""--"")"
     On Error Resume Next
     lo.ListColumns(10).DataBodyRange.Formula = formulaDesc
     On Error GoTo 0
-    
+
+    ' NOVO: Preenche valores padrao para campos de validacao INCRA (se existirem)
+    Call PreencherValoresPadraoINCRA(lo)
+
     M_SheetProtection.BloquearPlanilha ws
-    
+
     Call Processo_AtualizarMetricas
     Call Processo_Conv_SGL_UTM
     Call M_UI_Main.UI_Resize_ListBox
     Call M_UI_Main.UI_Refresh_ListBox
     Call M_Graficos.Grafico_PlotarPoligono(M_Config.SH_PAINEL)
     Call M_Graficos.Grafico_PlotarPoligono(M_Config.SH_CROQUI)
-    
+
     Call M_Utils.Utils_OtimizarPerformance(False)
 End Sub
 
 Private Sub EscreverCelulaSegura(ws As Worksheet, EnderecoOuNome As String, valor As Variant)
     On Error Resume Next
     ws.Range(EnderecoOuNome).Value = valor
+    On Error GoTo 0
+End Sub
+
+Private Sub PreencherValoresPadraoINCRA(lo As ListObject)
+    '----------------------------------------------------------------------------------
+    ' Preenche valores padrao para campos de validacao INCRA apos importacao
+    ' Se os campos nao existirem, a funcao simplesmente retorna sem erro
+    '----------------------------------------------------------------------------------
+    Dim colPrecisaoH As ListColumn, colPrecisaoV As ListColumn
+    Dim colMetodo As ListColumn, colCodLimite As ListColumn
+    Dim i As Long
+
+    On Error Resume Next
+
+    ' Tenta localizar as colunas de validacao INCRA
+    Set colPrecisaoH = lo.ListColumns("Precisao H (m)")
+    Set colPrecisaoV = lo.ListColumns("Precisao V (m)")
+    Set colMetodo = lo.ListColumns("Metodo Posic.")
+    Set colCodLimite = lo.ListColumns("Cod. Limite")
+
+    ' Se pelo menos uma coluna existe, preenche valores padrao
+    If Not colPrecisaoH Is Nothing Or Not colPrecisaoV Is Nothing Or _
+       Not colMetodo Is Nothing Or Not colCodLimite Is Nothing Then
+
+        For i = 1 To lo.ListRows.Count
+            ' Preenche Precisao H (padrao: 0.30m para limite artificial)
+            If Not colPrecisaoH Is Nothing Then
+                If IsEmpty(colPrecisaoH.DataBodyRange(i).Value) Or _
+                   colPrecisaoH.DataBodyRange(i).Value = "" Or _
+                   colPrecisaoH.DataBodyRange(i).Value = 0 Then
+                    colPrecisaoH.DataBodyRange(i).Value = 0.3
+                End If
+            End If
+
+            ' Preenche Precisao V (padrao: 0.50m)
+            If Not colPrecisaoV Is Nothing Then
+                If IsEmpty(colPrecisaoV.DataBodyRange(i).Value) Or _
+                   colPrecisaoV.DataBodyRange(i).Value = "" Or _
+                   colPrecisaoV.DataBodyRange(i).Value = 0 Then
+                    colPrecisaoV.DataBodyRange(i).Value = 0.5
+                End If
+            End If
+
+            ' Preenche Metodo Posicionamento (padrao: GNSS-RTK)
+            If Not colMetodo Is Nothing Then
+                If IsEmpty(colMetodo.DataBodyRange(i).Value) Or _
+                   colMetodo.DataBodyRange(i).Value = "" Then
+                    colMetodo.DataBodyRange(i).Value = "GNSS-RTK"
+                End If
+            End If
+
+            ' Preenche Codigo Limite (padrao: LA1 - Cerca)
+            If Not colCodLimite Is Nothing Then
+                If IsEmpty(colCodLimite.DataBodyRange(i).Value) Or _
+                   colCodLimite.DataBodyRange(i).Value = "" Then
+                    colCodLimite.DataBodyRange(i).Value = "LA1"
+                End If
+            End If
+        Next i
+
+        ' Formata colunas numericas
+        If Not colPrecisaoH Is Nothing Then colPrecisaoH.DataBodyRange.NumberFormat = "0.00"
+        If Not colPrecisaoV Is Nothing Then colPrecisaoV.DataBodyRange.NumberFormat = "0.00"
+    End If
+
     On Error GoTo 0
 End Sub
 
@@ -413,12 +499,41 @@ Public Sub Calcular_Azimute_UTM()
             e2 = CDbl(loUTM.DataBodyRange(1, 3).Value)
         End If
 
-        ' USA FUNÇÃO REFATORADA: Calcular_DistanciaAzimute_UTM
-        Dim calc As Type_CalculoPonto
-        calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(N1, E1, N2, e2)
+        ' Calcula AZIMUTE GEODÉSICO usando método de Puissant
+        ' (igual ao SIGEF - azimute verdadeiro, não aproximação)
 
-        ' USA NOVA FUNÇÃO: Str_FormatAzimuteGMS (com segundos)
-        loUTM.DataBodyRange(i, 6).Value = M_Utils.Str_FormatAzimuteGMS(calc.AzimuteDecimal)
+        ' Obtém fuso e hemisfério selecionados
+        Dim fusoUTM As Integer, hemisferio As String
+        Dim hemisferioSul As Boolean
+        On Error Resume Next
+        fusoUTM = M_UI_Main.UI_GetFusoSelecionado()
+        hemisferioSul = M_UI_Main.UI_GetHemisferioSul()
+        If fusoUTM = 0 Then fusoUTM = 23  ' Padrão para Brasil
+        hemisferio = IIf(hemisferioSul, "S", "N")
+        On Error GoTo Erro
+
+        ' Converte AMBOS os pontos de UTM → Geo usando função que retorna Dictionary
+        Dim lat1 As Double, lon1 As Double, lat2 As Double, lon2 As Double
+        Dim geoTemp As Object
+        Dim hemisferioSulBool As Boolean
+        hemisferioSulBool = (UCase(Left(hemisferio, 1)) = "S")
+
+        ' Ponto 1
+        Set geoTemp = M_Math_Geo.Geo_UTM_Para_LatLon(N1, E1, fusoUTM, hemisferioSulBool)
+        lat1 = geoTemp("Latitude")
+        lon1 = geoTemp("Longitude")
+
+        ' Ponto 2
+        Set geoTemp = M_Math_Geo.Geo_UTM_Para_LatLon(N2, e2, fusoUTM, hemisferioSulBool)
+        lat2 = geoTemp("Latitude")
+        lon2 = geoTemp("Longitude")
+
+        ' Calcula azimute geodésico usando Puissant (método INCRA/SIGEF)
+        Dim azimuteGeod As Double
+        azimuteGeod = M_Math_Geo.Geo_Azimute_Puissant(lat1, lon1, lat2, lon2)
+
+        ' Formata com segundos (GGG°MM'SS")
+        loUTM.DataBodyRange(i, 6).Value = M_Utils.Str_FormatAzimuteGMS(azimuteGeod)
     Next i
 
     Call M_Utils.Utils_OtimizarPerformance(False)

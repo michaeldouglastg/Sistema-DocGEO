@@ -1,0 +1,73 @@
+TESTE DE DEBUG - CONVERGÊNCIA MERIDIANA
+=====================================
+
+DADOS DO PRIMEIRO SEGMENTO:
+Ponto A: HVZV-P-21400
+  E = 644711.65 m
+  N = 7514524.6 m
+
+Ponto B: HVZV-P-21401  E = 644712.84 m
+  N = 7514523.79 m
+
+Azimute Esperado: 123°54'42"
+Azimute Calculado: 123°40'00"
+Diferença: -14'42" (calculado é MENOR)
+
+=====================================
+ANÁLISE:
+
+1. Coordenadas UTM parecem estar no Hemisfério Sul (N < 10000000)
+2. Valor E ~644711 sugere Fuso 23 ou 24 (centro do Brasil)
+
+TESTE MANUAL DE CONVERGÊNCIA:
+
+Supondo Fuso 23, Hemisfério Sul:
+
+1. Meridiano Central do Fuso 23:
+   λ0 = (23 × 6) - 183 = -45°
+
+2. Conversão UTM → Geo (aproximada):
+   Para E ~644711, N ~7514524 (Fuso 23, Sul)
+
+   Lat ≈ -22.5° (Sul de Brasília)
+   Lon ≈ -47.9° (Oeste de São Paulo)
+
+3. Cálculo de Convergência:
+   ΔLon = Lon - λ0 = -47.9° - (-45°) = -2.9°
+
+   γ = ΔLon × sin(Lat)
+   γ = -2.9° × sin(-22.5°)
+   γ = -2.9° × (-0.382683)
+   γ = +1.110° = +1°06'36"
+
+4. Relação:
+   Azimute_Geodésico = Azimute_Grid + γ
+
+   Se γ = +1°06'36", então:
+   Azimute_Geodésico = Azimute_Grid + 1°06'36"
+
+PROBLEMA IDENTIFICADO:
+
+Se o azimute calculado DIMINUIU (de 124°12' para 123°40'), isso indica que:
+- A convergência está sendo SUBTRAÍDA (não somada)
+- OU a fórmula está com sinal invertido
+- OU o sentido da correção está errado
+
+=====================================
+PRÓXIMOS PASSOS:
+
+1. Verificar qual Fuso e Hemisfério está selecionado
+2. Verificar se a conversão UTM→Geo está retornando valores corretos de Lat/Lon
+3. Verificar o sinal da convergência calculada
+4. Verificar se a origem dos "valores esperados" está clara
+
+=====================================
+COMPARAÇÃO COM SEGUNDO SEGMENTO:
+
+Ponto B → C: Esperado 113°23'57", Calculado 162°03'38"
+Diferença: +48°39'41" (MUITO GRANDE!)
+
+Isso sugere que algo está MUITO errado:
+- Possível erro na conversão UTM→Geo
+- Possível erro no cálculo de azimute de base
+- Possível dados de entrada incorretos

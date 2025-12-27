@@ -501,3 +501,87 @@ Public Function Geo_Geoc_Para_Topoc(ByVal x As Double, ByVal y As Double, ByVal 
 
     Geo_Geoc_Para_Topoc = resultado
 End Function
+
+' ==============================================================================
+' CONVERGENCIA MERIDIANA - CORRECAO DE AZIMUTE UTM
+' ==============================================================================
+
+Public Function Calcular_ConvergenciaMeridiana(ByVal Latitude As Double, ByVal Longitude As Double, ByVal fuso As Integer) As Double
+    '----------------------------------------------------------------------------------
+    ' Calcula a Convergência Meridiana (γ) para coordenadas UTM
+    ' Convergência = ângulo entre Norte Verdadeiro e Norte de Grid
+    '
+    ' Fórmula simplificada (precisão ~1"):
+    ' γ ≈ (λ - λ0) × sin(φ)
+    '
+    ' Onde:
+    ' λ = longitude do ponto
+    ' λ0 = longitude do meridiano central do fuso
+    ' φ = latitude do ponto
+    '
+    ' Retorna: ângulo em GRAUS (positivo = leste, negativo = oeste)
+    '----------------------------------------------------------------------------------
+    Dim lonCentral As Double
+    Dim deltaLon As Double
+    Dim latRad As Double
+    Dim deltaLonRad As Double
+    Dim convergencia As Double
+
+    ' Calcula longitude do meridiano central do fuso
+    ' Fórmula: λ0 = (fuso × 6) - 183
+    lonCentral = (fuso * 6) - 183
+
+    ' Diferença de longitude (em graus)
+    deltaLon = Longitude - lonCentral
+
+    ' Converte para radianos
+    latRad = Latitude * PI / 180
+    deltaLonRad = deltaLon * PI / 180
+
+    ' Fórmula simplificada da convergência meridiana
+    ' γ = ΔLon × sin(φ)
+    convergencia = deltaLonRad * Sin(latRad)
+
+    ' Converte de radianos para graus
+    Calcular_ConvergenciaMeridiana = convergencia * 180 / PI
+End Function
+
+Public Function Converter_AzimuteGridParaGeod(ByVal azimuteGrid As Double, ByVal Latitude As Double, _
+                                                ByVal Longitude As Double, ByVal fuso As Integer) As Double
+    '----------------------------------------------------------------------------------
+    ' Converte Azimute de Grid (plano UTM) para Azimute Geodésico (verdadeiro)
+    '
+    ' Azimute Geodésico = Azimute de Grid + Convergência Meridiana
+    '----------------------------------------------------------------------------------
+    Dim convergencia As Double
+    Dim azimuteGeod As Double
+
+    convergencia = Calcular_ConvergenciaMeridiana(Latitude, Longitude, fuso)
+    azimuteGeod = azimuteGrid + convergencia
+
+    ' Normaliza para 0-360°
+    If azimuteGeod < 0 Then azimuteGeod = azimuteGeod + 360
+    If azimuteGeod >= 360 Then azimuteGeod = azimuteGeod - 360
+
+    Converter_AzimuteGridParaGeod = azimuteGeod
+End Function
+
+Public Function Converter_AzimuteGeodParaGrid(ByVal azimuteGeod As Double, ByVal Latitude As Double, _
+                                                ByVal Longitude As Double, ByVal fuso As Integer) As Double
+    '----------------------------------------------------------------------------------
+    ' Converte Azimute Geodésico (verdadeiro) para Azimute de Grid (plano UTM)
+    '
+    ' Azimute de Grid = Azimute Geodésico - Convergência Meridiana
+    '----------------------------------------------------------------------------------
+    Dim convergencia As Double
+    Dim azimuteGrid As Double
+
+    convergencia = Calcular_ConvergenciaMeridiana(Latitude, Longitude, fuso)
+    azimuteGrid = azimuteGeod - convergencia
+
+    ' Normaliza para 0-360°
+    If azimuteGrid < 0 Then azimuteGrid = azimuteGrid + 360
+    If azimuteGrid >= 360 Then azimuteGrid = azimuteGrid - 360
+
+    Converter_AzimuteGeodParaGrid = azimuteGrid
+End Function
