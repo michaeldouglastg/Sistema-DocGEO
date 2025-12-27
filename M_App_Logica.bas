@@ -223,18 +223,27 @@ Public Sub Processo_Conv_SGL_UTM()
             arrOut(i, 5) = arrSGL(1, 1)
         End If
 
-        ' USA FUNÇÃO REFATORADA: Calcular_DistanciaAzimute_UTM (calcula tudo de uma vez)
+        ' Calcula distância usando coordenadas UTM (plano)
         Dim calc As Type_CalculoPonto
         calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(cacheN(i), cacheE(i), cacheN(idxProx), cacheE(idxProx))
 
-        ' NOVO: Aplica correção de Convergência Meridiana para obter Azimute Geodésico
-        ' Azimute Geodésico = Azimute de Grid + Convergência Meridiana
+        ' NOVO: Calcula AZIMUTE GEODÉSICO usando método de Puissant
+        ' (SGL já tem coordenadas geodésicas - usa diretamente)
+        Dim lat1 As Double, lon1 As Double, lat2 As Double, lon2 As Double
         Dim azimuteGeod As Double
-        lonDD = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 2)))
-        latDD = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 3)))
-        azimuteGeod = M_Math_Geo.Converter_AzimuteGridParaGeod(calc.AzimuteDecimal, latDD, lonDD, zonaPadrao)
 
-        ' USA NOVA FUNÇÃO: Str_FormatAzimuteGMS (com segundos: GGG°MM'SS")
+        ' Ponto atual (i)
+        lon1 = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 2)))
+        lat1 = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(i, 3)))
+
+        ' Ponto próximo (idxProx)
+        lon2 = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(idxProx, 2)))
+        lat2 = M_Utils.Str_DMS_Para_DD(CStr(arrSGL(idxProx, 3)))
+
+        ' Calcula azimute geodésico usando Puissant (método INCRA/SIGEF)
+        azimuteGeod = M_Math_Geo.Geo_Azimute_Puissant(lat1, lon1, lat2, lon2)
+
+        ' Formata com segundos (GGG°MM'SS")
         arrOut(i, 6) = M_Utils.Str_FormatAzimuteGMS(azimuteGeod)
         arrOut(i, 7) = Round(calc.Distancia, 3)
     Next i
@@ -488,12 +497,14 @@ Public Sub Calcular_Azimute_UTM()
             e2 = CDbl(loUTM.DataBodyRange(1, 3).Value)
         End If
 
-        ' USA FUNÇÃO REFATORADA: Calcular_DistanciaAzimute_UTM
+        ' Calcula distância usando coordenadas UTM (plano)
         Dim calc As Type_CalculoPonto
         calc = M_Math_Geo.Calcular_DistanciaAzimute_UTM(N1, E1, N2, e2)
 
-        ' NOVO: Aplica correção de Convergência Meridiana
-        ' Primeiro, obtém fuso e hemisfério selecionados
+        ' NOVO: Calcula AZIMUTE GEODÉSICO usando método de Puissant
+        ' (igual ao SIGEF - azimute verdadeiro, não aproximação)
+
+        ' Obtém fuso e hemisfério selecionados
         Dim fusoUTM As Integer, hemisferio As String
         Dim hemisferioSul As Boolean
         On Error Resume Next
@@ -503,15 +514,16 @@ Public Sub Calcular_Azimute_UTM()
         hemisferio = IIf(hemisferioSul, "S", "N")
         On Error GoTo Erro
 
-        ' Converte UTM → Geo para obter lat/lon e calcular convergência
-        Dim geoAtual As Type_Geo
-        geoAtual = M_Math_Geo.Converter_UTMParaGeo(N1, E1, fusoUTM, hemisferio)
+        ' Converte AMBOS os pontos de UTM → Geo
+        Dim geo1 As Type_Geo, geo2 As Type_Geo
+        geo1 = M_Math_Geo.Converter_UTMParaGeo(N1, E1, fusoUTM, hemisferio)
+        geo2 = M_Math_Geo.Converter_UTMParaGeo(N2, e2, fusoUTM, hemisferio)
 
-        ' Aplica correção de convergência meridiana
+        ' Calcula azimute geodésico usando Puissant (método INCRA/SIGEF)
         Dim azimuteGeod As Double
-        azimuteGeod = M_Math_Geo.Converter_AzimuteGridParaGeod(calc.AzimuteDecimal, geoAtual.Latitude, geoAtual.Longitude, fusoUTM)
+        azimuteGeod = M_Math_Geo.Geo_Azimute_Puissant(geo1.Latitude, geo1.Longitude, geo2.Latitude, geo2.Longitude)
 
-        ' USA NOVA FUNÇÃO: Str_FormatAzimuteGMS (com segundos)
+        ' Formata com segundos (GGG°MM'SS")
         loUTM.DataBodyRange(i, 6).Value = M_Utils.Str_FormatAzimuteGMS(azimuteGeod)
     Next i
 
