@@ -243,38 +243,106 @@ Public Sub Processo_PosImportacao()
     Dim ws As Worksheet, lo As ListObject
     Set ws = ThisWorkbook.Sheets(M_Config.App_GetNomeAbaAtiva())
     Set lo = ws.ListObjects(M_Config.App_GetNomeTabelaAtiva())
-    
+
     If lo.ListRows.Count = 0 Then Exit Sub
-    
+
     Call M_Utils.Utils_OtimizarPerformance(True)
     M_SheetProtection.DesbloquearPlanilha ws
-    
+
     Call M_UI_Main.UI_DetectarFusoHemisferio
-    
+
     lo.ListColumns(4).DataBodyRange.NumberFormat = "0.00"
     lo.ListColumns(7).DataBodyRange.NumberFormat = "0.000"
-    
+
     Dim formulaDesc As String
     formulaDesc = "=IFERROR(VLOOKUP(TRIM([@Tipo])," & M_Config.TBL_PARAMETROS & ",2,FALSE), ""--"")"
     On Error Resume Next
     lo.ListColumns(10).DataBodyRange.Formula = formulaDesc
     On Error GoTo 0
-    
+
+    ' NOVO: Preenche valores padrao para campos de validacao INCRA (se existirem)
+    Call PreencherValoresPadraoINCRA(lo)
+
     M_SheetProtection.BloquearPlanilha ws
-    
+
     Call Processo_AtualizarMetricas
     Call Processo_Conv_SGL_UTM
     Call M_UI_Main.UI_Resize_ListBox
     Call M_UI_Main.UI_Refresh_ListBox
     Call M_Graficos.Grafico_PlotarPoligono(M_Config.SH_PAINEL)
     Call M_Graficos.Grafico_PlotarPoligono(M_Config.SH_CROQUI)
-    
+
     Call M_Utils.Utils_OtimizarPerformance(False)
 End Sub
 
 Private Sub EscreverCelulaSegura(ws As Worksheet, EnderecoOuNome As String, valor As Variant)
     On Error Resume Next
     ws.Range(EnderecoOuNome).Value = valor
+    On Error GoTo 0
+End Sub
+
+Private Sub PreencherValoresPadraoINCRA(lo As ListObject)
+    '----------------------------------------------------------------------------------
+    ' Preenche valores padrao para campos de validacao INCRA apos importacao
+    ' Se os campos nao existirem, a funcao simplesmente retorna sem erro
+    '----------------------------------------------------------------------------------
+    Dim colPrecisaoH As ListColumn, colPrecisaoV As ListColumn
+    Dim colMetodo As ListColumn, colCodLimite As ListColumn
+    Dim i As Long
+
+    On Error Resume Next
+
+    ' Tenta localizar as colunas de validacao INCRA
+    Set colPrecisaoH = lo.ListColumns("Precisao H (m)")
+    Set colPrecisaoV = lo.ListColumns("Precisao V (m)")
+    Set colMetodo = lo.ListColumns("Metodo Posic.")
+    Set colCodLimite = lo.ListColumns("Cod. Limite")
+
+    ' Se pelo menos uma coluna existe, preenche valores padrao
+    If Not colPrecisaoH Is Nothing Or Not colPrecisaoV Is Nothing Or _
+       Not colMetodo Is Nothing Or Not colCodLimite Is Nothing Then
+
+        For i = 1 To lo.ListRows.Count
+            ' Preenche Precisao H (padrao: 0.30m para limite artificial)
+            If Not colPrecisaoH Is Nothing Then
+                If IsEmpty(colPrecisaoH.DataBodyRange(i).Value) Or _
+                   colPrecisaoH.DataBodyRange(i).Value = "" Or _
+                   colPrecisaoH.DataBodyRange(i).Value = 0 Then
+                    colPrecisaoH.DataBodyRange(i).Value = 0.3
+                End If
+            End If
+
+            ' Preenche Precisao V (padrao: 0.50m)
+            If Not colPrecisaoV Is Nothing Then
+                If IsEmpty(colPrecisaoV.DataBodyRange(i).Value) Or _
+                   colPrecisaoV.DataBodyRange(i).Value = "" Or _
+                   colPrecisaoV.DataBodyRange(i).Value = 0 Then
+                    colPrecisaoV.DataBodyRange(i).Value = 0.5
+                End If
+            End If
+
+            ' Preenche Metodo Posicionamento (padrao: GNSS-RTK)
+            If Not colMetodo Is Nothing Then
+                If IsEmpty(colMetodo.DataBodyRange(i).Value) Or _
+                   colMetodo.DataBodyRange(i).Value = "" Then
+                    colMetodo.DataBodyRange(i).Value = "GNSS-RTK"
+                End If
+            End If
+
+            ' Preenche Codigo Limite (padrao: LA1 - Cerca)
+            If Not colCodLimite Is Nothing Then
+                If IsEmpty(colCodLimite.DataBodyRange(i).Value) Or _
+                   colCodLimite.DataBodyRange(i).Value = "" Then
+                    colCodLimite.DataBodyRange(i).Value = "LA1"
+                End If
+            End If
+        Next i
+
+        ' Formata colunas numericas
+        If Not colPrecisaoH Is Nothing Then colPrecisaoH.DataBodyRange.NumberFormat = "0.00"
+        If Not colPrecisaoV Is Nothing Then colPrecisaoV.DataBodyRange.NumberFormat = "0.00"
+    End If
+
     On Error GoTo 0
 End Sub
 
