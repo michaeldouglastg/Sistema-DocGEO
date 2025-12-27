@@ -23,19 +23,42 @@ Public Sub ExecutarTodosTestes()
 
     Debug.Print resultado
 
-    ' Cria arquivo com resultado
+    ' Tenta criar arquivo com resultado
+    On Error Resume Next
     Dim fso As Object, arquivo As Object
     Dim caminhoArquivo As String
+    Dim salvouArquivo As Boolean
 
     Set fso = CreateObject("Scripting.FileSystemObject")
-    caminhoArquivo = ThisWorkbook.Path & "\resultado_testes_incra.txt"
+
+    ' Tenta salvar no diretório do workbook
+    If ThisWorkbook.Path <> "" Then
+        caminhoArquivo = ThisWorkbook.Path & "\resultado_testes_incra.txt"
+    Else
+        ' Se workbook não foi salvo, usa área de trabalho do usuário
+        caminhoArquivo = CreateObject("WScript.Shell").SpecialFolders("Desktop") & "\resultado_testes_incra.txt"
+    End If
 
     Set arquivo = fso.CreateTextFile(caminhoArquivo, True)
-    arquivo.WriteLine resultado
-    arquivo.Close
 
-    MsgBox "Testes concluidos!" & vbCrLf & vbCrLf & _
-           "Resultado salvo em:" & vbCrLf & caminhoArquivo, vbInformation
+    If Err.Number = 0 Then
+        arquivo.WriteLine resultado
+        arquivo.Close
+        salvouArquivo = True
+    Else
+        salvouArquivo = False
+    End If
+    On Error GoTo 0
+
+    ' Mostra resultado
+    If salvouArquivo Then
+        MsgBox "Testes concluidos!" & vbCrLf & vbCrLf & _
+               "Resultado salvo em:" & vbCrLf & caminhoArquivo, vbInformation
+    Else
+        MsgBox "Testes concluidos!" & vbCrLf & vbCrLf & _
+               "NOTA: Nao foi possivel salvar arquivo." & vbCrLf & _
+               "Resultado disponivel na janela Immediate (Ctrl+G)", vbInformation
+    End If
 End Sub
 
 Private Function Teste_TiposVertice() As String
