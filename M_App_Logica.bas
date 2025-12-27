@@ -223,11 +223,13 @@ Public Sub Processo_Conv_SGL_UTM()
             arrOut(i, 5) = arrSGL(1, 1)
         End If
 
-        ' Calcula distância usando coordenadas UTM (plano)
-        Dim calc As Type_CalculoPonto
-        calc = M_Math_Geo_REFATORADO.Calcular_DistanciaAzimute_UTM(cacheN(i), cacheE(i), cacheN(idxProx), cacheE(idxProx))
+        ' Calcula distância usando Pitágoras (coordenadas UTM planas)
+        Dim deltaN As Double, deltaE As Double, distancia As Double
+        deltaN = cacheN(idxProx) - cacheN(i)
+        deltaE = cacheE(idxProx) - cacheE(i)
+        distancia = Sqr(deltaN * deltaN + deltaE * deltaE)
 
-        ' NOVO: Calcula AZIMUTE GEODÉSICO usando método de Puissant
+        ' Calcula AZIMUTE GEODÉSICO usando método de Puissant
         ' (SGL já tem coordenadas geodésicas - usa diretamente)
         Dim lat1 As Double, lon1 As Double, lat2 As Double, lon2 As Double
         Dim azimuteGeod As Double
@@ -245,7 +247,7 @@ Public Sub Processo_Conv_SGL_UTM()
 
         ' Formata com segundos (GGG°MM'SS")
         arrOut(i, 6) = M_Utils.Str_FormatAzimuteGMS(azimuteGeod)
-        arrOut(i, 7) = Round(calc.Distancia, 3)
+        arrOut(i, 7) = Round(distancia, 3)
     Next i
 
     loUTM.DataBodyRange.Value = arrOut
@@ -497,11 +499,7 @@ Public Sub Calcular_Azimute_UTM()
             e2 = CDbl(loUTM.DataBodyRange(1, 3).Value)
         End If
 
-        ' Calcula distância usando coordenadas UTM (plano)
-        Dim calc As Type_CalculoPonto
-        calc = M_Math_Geo_REFATORADO.Calcular_DistanciaAzimute_UTM(N1, E1, N2, e2)
-
-        ' NOVO: Calcula AZIMUTE GEODÉSICO usando método de Puissant
+        ' Calcula AZIMUTE GEODÉSICO usando método de Puissant
         ' (igual ao SIGEF - azimute verdadeiro, não aproximação)
 
         ' Obtém fuso e hemisfério selecionados
@@ -514,14 +512,25 @@ Public Sub Calcular_Azimute_UTM()
         hemisferio = IIf(hemisferioSul, "S", "N")
         On Error GoTo Erro
 
-        ' Converte AMBOS os pontos de UTM → Geo
-        Dim geo1 As Type_Geo, geo2 As Type_Geo
-        geo1 = M_Math_Geo_REFATORADO.Converter_UTMParaGeo(N1, E1, fusoUTM, hemisferio)
-        geo2 = M_Math_Geo_REFATORADO.Converter_UTMParaGeo(N2, e2, fusoUTM, hemisferio)
+        ' Converte AMBOS os pontos de UTM → Geo usando função que retorna Dictionary
+        Dim lat1 As Double, lon1 As Double, lat2 As Double, lon2 As Double
+        Dim geoTemp As Object
+        Dim hemisferioSulBool As Boolean
+        hemisferioSulBool = (UCase(Left(hemisferio, 1)) = "S")
+
+        ' Ponto 1
+        Set geoTemp = M_Math_Geo.Geo_UTM_Para_LatLon(N1, E1, fusoUTM, hemisferioSulBool)
+        lat1 = geoTemp("Latitude")
+        lon1 = geoTemp("Longitude")
+
+        ' Ponto 2
+        Set geoTemp = M_Math_Geo.Geo_UTM_Para_LatLon(N2, e2, fusoUTM, hemisferioSulBool)
+        lat2 = geoTemp("Latitude")
+        lon2 = geoTemp("Longitude")
 
         ' Calcula azimute geodésico usando Puissant (método INCRA/SIGEF)
         Dim azimuteGeod As Double
-        azimuteGeod = M_Math_Geo.Geo_Azimute_Puissant(geo1.Latitude, geo1.Longitude, geo2.Latitude, geo2.Longitude)
+        azimuteGeod = M_Math_Geo.Geo_Azimute_Puissant(lat1, lon1, lat2, lon2)
 
         ' Formata com segundos (GGG°MM'SS")
         loUTM.DataBodyRange(i, 6).Value = M_Utils.Str_FormatAzimuteGMS(azimuteGeod)
