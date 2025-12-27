@@ -121,6 +121,28 @@ Public Const CAD_NATUREZA As String = "Natureza/Area"
 Public Const CBO_FUSO As String = "cboFuso"
 Public Const CBO_HEMISFERIO As String = "cboHemisferio"
 
+' --- CONSTANTES DE VALIDACAO INCRA ---
+' Precisao horizontal conforme Manual INCRA (Cap. 1.4.4)
+Public Const PREC_LIMITE_ARTIFICIAL As Double = 0.5        ' LA1-LA4: <= 0.50m
+Public Const PREC_LIMITE_NATURAL As Double = 3#             ' LN1-LN6: <= 3.00m
+Public Const PREC_LIMITE_INACESSIVEL As Double = 7.5       ' LA5-LA7: <= 7.50m
+Public Const PREC_VERTICAL_PADRAO As Double = 1#           ' Padrao vertical: <= 1.00m
+
+' Rotulos para novos campos de validacao
+Public Const LBL_PRECISAO_H As String = "Precisao H (m)"
+Public Const LBL_PRECISAO_V As String = "Precisao V (m)"
+Public Const LBL_METODO_POS As String = "Metodo Posic."
+Public Const LBL_CODIGO_LIMITE As String = "Cod. Limite"
+
+' Metodos de posicionamento validos (Cap. 1.4.3 e 3 do Manual)
+Public Const METODO_GNSS_RTK As String = "GNSS-RTK"
+Public Const METODO_GNSS_PPP As String = "GNSS-PPP"
+Public Const METODO_GNSS_REL As String = "GNSS-REL"
+Public Const METODO_TOPOGRAFIA As String = "TOP"
+Public Const METODO_GEOM_ANALITICA As String = "GAN"
+Public Const METODO_SENS_REMOTO As String = "SRE"
+Public Const METODO_BASE_CARTO As String = "BCA"
+
 ' ==============================================================================
 ' FUNCOES DE ESTADO
 ' ==============================================================================

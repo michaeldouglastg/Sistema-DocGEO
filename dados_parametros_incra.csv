@@ -1,0 +1,24 @@
+Codigo,Descricao,Tipo,Precisao_Requerida
+LA1,Cerca,Artificial,0.50
+LA2,Estrada,Artificial,0.50
+LA3,Rio/Corrego Canalizado,Artificial,0.50
+LA4,"Vala, Rego, Canal",Artificial,0.50
+LA5,Limite Inacessivel (Artificial),Artificial,7.50
+LA6,"Limite Inacessivel (Serra, Escarpa)",Artificial,7.50
+LA7,"Limite Inacessivel (Rio, Corrego, Lago)",Artificial,7.50
+LN1,Talvegue de Rio/Corrego,Natural,3.00
+LN2,Crista de Serra/Espigao,Natural,3.00
+LN3,Margem de Rio/Corrego,Natural,3.00
+LN4,Margem de Lago/Lagoa,Natural,3.00
+LN5,Margem de Oceano,Natural,3.00
+LN6,Limite Seco de Praia/Mangue,Natural,3.00
+M,Marco (materializado),Vertice,-
+P,Ponto (feicao identificavel),Vertice,-
+V,Virtual (calculado),Vertice,-
+GNSS-RTK,GNSS - Real Time Kinematic,Metodo,-
+GNSS-PPP,GNSS - Precise Point Positioning,Metodo,-
+GNSS-REL,GNSS - Relativo,Metodo,-
+TOP,Topografia Classica,Metodo,-
+GAN,Geometria Analitica,Metodo,-
+SRE,Sensoriamento Remoto,Metodo,-
+BCA,Base Cartografica,Metodo,-
